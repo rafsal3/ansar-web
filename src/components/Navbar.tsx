@@ -1,96 +1,340 @@
-import { Link } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { User, LogOut, ChevronDown, Menu, X } from "lucide-react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
     const { isAuthenticated, isAlumni, logout } = useAuth();
+    const location = useLocation();
+    const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [mobileDropdownOpen, setMobileDropdownOpen] = useState<string | null>(null);
+
+    const isActive = (path: string): boolean => {
+        if (path === "/") {
+            return location.pathname === "/";
+        }
+        return location.pathname.startsWith(path);
+    };
+
+    const isDropdownActive = (paths: string[]): boolean => {
+        return paths.some(path => location.pathname.startsWith(path));
+    };
+
+    const navLinkClass = (path: string): string => {
+        return `relative text-gray-700 hover:text-blue-600 transition-colors pb-1 ${isActive(path)
+            ? "text-blue-600 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-blue-600"
+            : ""
+            }`;
+    };
+
+    const mobileNavLinkClass = (path: string): string => {
+        return `block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${isActive(path) ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600" : ""
+            }`;
+    };
+
+    const dropdownLinkClass = (paths: string[]): string => {
+        return `relative text-gray-700 hover:text-blue-600 transition-colors pb-1 flex items-center gap-1 cursor-pointer ${isDropdownActive(paths)
+            ? "text-blue-600 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-blue-600"
+            : ""
+            }`;
+    };
+
+    const handleMouseEnter = (dropdown: string): void => {
+        setActiveDropdown(dropdown);
+    };
+
+    const handleMouseLeave = (): void => {
+        setActiveDropdown(null);
+    };
+
+    const toggleMobileMenu = (): void => {
+        setMobileMenuOpen(!mobileMenuOpen);
+        setMobileDropdownOpen(null);
+    };
+
+    const toggleMobileDropdown = (dropdown: string): void => {
+        setMobileDropdownOpen(mobileDropdownOpen === dropdown ? null : dropdown);
+    };
+
+    const closeMobileMenu = (): void => {
+        setMobileMenuOpen(false);
+        setMobileDropdownOpen(null);
+    };
 
     return (
-        <nav className="bg-white shadow-md">
+        <nav className="bg-white shadow-md relative z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
-                    <Link to="/" className="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors">
+                    {/* Logo */}
+                    <Link
+                        to="/"
+                        className="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors"
+                        onClick={closeMobileMenu}
+                    >
                         Ansar College
                     </Link>
-                    <ul className="flex space-x-8">
+
+                    {/* Desktop Navigation */}
+                    <ul className="hidden lg:flex space-x-8">
                         <li>
-                            <Link to="/" className="text-gray-700 hover:text-blue-600 transition-colors">
+                            <Link to="/" className={navLinkClass("/")}>
                                 Home
                             </Link>
                         </li>
                         <li>
-                            <Link to="/about" className="text-gray-700 hover:text-blue-600 transition-colors">
+                            <Link to="/about" className={navLinkClass("/about")}>
                                 About
                             </Link>
                         </li>
+
+                        {/* Academics Dropdown */}
+                        <li
+                            className="relative"
+                            onMouseEnter={() => handleMouseEnter('academics')}
+                            onMouseLeave={handleMouseLeave}
+                        >
+                            <div className={dropdownLinkClass(["/notifications", "/faculty", "/events", "/courses"])}>
+                                <span>Academics</span>
+                                <ChevronDown className="w-4 h-4" />
+                            </div>
+                            {activeDropdown === 'academics' && (
+                                <div
+                                    className="absolute top-full left-0 mt-0 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-100"
+                                    onMouseEnter={() => handleMouseEnter('academics')}
+                                    onMouseLeave={handleMouseLeave}
+                                >
+                                    <Link
+                                        to="/notifications"
+                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                    >
+                                        Notifications
+                                    </Link>
+                                    <Link
+                                        to="/faculty"
+                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                    >
+                                        Faculty
+                                    </Link>
+                                    <Link
+                                        to="/events"
+                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                    >
+                                        Events
+                                    </Link>
+                                    <Link
+                                        to="/courses"
+                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                    >
+                                        Courses
+                                    </Link>
+                                </div>
+                            )}
+                        </li>
+
                         <li>
-                            <Link to="/news" className="text-gray-700 hover:text-blue-600 transition-colors">
+                            <Link to="/news" className={navLinkClass("/news")}>
                                 News
                             </Link>
                         </li>
+
+                        {/* Alumni Dropdown - Only show if user is alumni */}
+                        {isAlumni && (
+                            <li
+                                className="relative"
+                                onMouseEnter={() => handleMouseEnter('alumni')}
+                                onMouseLeave={handleMouseLeave}
+                            >
+                                <div className={dropdownLinkClass(["/memories", "/batch-mates"])}>
+                                    <span>Alumni</span>
+                                    <ChevronDown className="w-4 h-4" />
+                                </div>
+                                {activeDropdown === 'alumni' && (
+                                    <div
+                                        className="absolute top-full left-0 mt-0 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-100"
+                                        onMouseEnter={() => handleMouseEnter('alumni')}
+                                        onMouseLeave={handleMouseLeave}
+                                    >
+                                        <Link
+                                            to="/memories"
+                                            className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                        >
+                                            Memories
+                                        </Link>
+                                        <Link
+                                            to="/batch-mates"
+                                            className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                        >
+                                            Batch Mates
+                                        </Link>
+                                    </div>
+                                )}
+                            </li>
+                        )}
+
                         <li>
-                            <Link to="/events" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                Events
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/courses" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                Courses
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/notifications" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                Notifications
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/faculty" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                Faculty
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
+                            <Link to="/contact" className={navLinkClass("/contact")}>
                                 Contact
                             </Link>
                         </li>
-
-                        {/* Alumni-only links */}
-                        {isAlumni && (
-                            <>
-                                <li>
-                                    <Link to="/memories" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                        Memories
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/batch-mates" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                        Batch Mates
-                                    </Link>
-                                </li>
-                            </>
-                        )}
                     </ul>
 
-                    {/* Login/Logout Button */}
-                    {isAuthenticated ? (
-                        <button
-                            onClick={logout}
-                            className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-full text-white flex items-center gap-2 transition-colors shadow-sm"
-                        >
-                            <LogOut className="w-4 h-4" />
-                            <span>Logout</span>
-                        </button>
-                    ) : (
-                        <Link
-                            to="/login"
-                            className="bg-green-600 hover:bg-green-700 px-5 py-2 rounded-full text-white flex items-center gap-2 transition-colors shadow-sm"
-                        >
-                            <User className="w-4 h-4" />
-                            <span>Login / Register</span>
-                        </Link>
-                    )}
+                    {/* Desktop Login/Logout Button */}
+                    <div className="hidden lg:block">
+                        {isAuthenticated ? (
+                            <button
+                                onClick={logout}
+                                className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-full text-white flex items-center gap-2 transition-colors shadow-sm"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                <span>Logout</span>
+                            </button>
+                        ) : (
+                            <Link
+                                to="/login"
+                                className="bg-green-600 hover:bg-green-700 px-5 py-2 rounded-full text-white flex items-center gap-2 transition-colors shadow-sm"
+                            >
+                                <User className="w-4 h-4" />
+                                <span>Login / Register</span>
+                            </Link>
+                        )}
+                    </div>
+
+                    {/* Mobile Menu Button */}
+                    <button
+                        onClick={toggleMobileMenu}
+                        className="lg:hidden p-2 text-gray-700 hover:text-blue-600 transition-colors"
+                        aria-label="Toggle menu"
+                    >
+                        {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    </button>
                 </div>
             </div>
+
+            {/* Mobile Menu */}
+            {mobileMenuOpen && (
+                <div className="lg:hidden bg-white border-t border-gray-200 shadow-lg">
+                    <div className="px-2 pt-2 pb-3 space-y-1">
+                        <Link to="/" className={mobileNavLinkClass("/")} onClick={closeMobileMenu}>
+                            Home
+                        </Link>
+                        <Link to="/about" className={mobileNavLinkClass("/about")} onClick={closeMobileMenu}>
+                            About
+                        </Link>
+
+                        {/* Mobile Academics Dropdown */}
+                        <div>
+                            <button
+                                onClick={() => toggleMobileDropdown('academics')}
+                                className={`w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${isDropdownActive(["/notifications", "/faculty", "/events", "/courses"]) ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600" : ""
+                                    }`}
+                            >
+                                <span>Academics</span>
+                                <ChevronDown className={`w-4 h-4 transition-transform ${mobileDropdownOpen === 'academics' ? 'rotate-180' : ''
+                                    }`} />
+                            </button>
+                            {mobileDropdownOpen === 'academics' && (
+                                <div className="bg-gray-50 pl-4">
+                                    <Link
+                                        to="/notifications"
+                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                        onClick={closeMobileMenu}
+                                    >
+                                        Notifications
+                                    </Link>
+                                    <Link
+                                        to="/faculty"
+                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                        onClick={closeMobileMenu}
+                                    >
+                                        Faculty
+                                    </Link>
+                                    <Link
+                                        to="/events"
+                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                        onClick={closeMobileMenu}
+                                    >
+                                        Events
+                                    </Link>
+                                    <Link
+                                        to="/courses"
+                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                        onClick={closeMobileMenu}
+                                    >
+                                        Courses
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+
+                        <Link to="/news" className={mobileNavLinkClass("/news")} onClick={closeMobileMenu}>
+                            News
+                        </Link>
+
+                        {/* Mobile Alumni Dropdown - Only show if user is alumni */}
+                        {isAlumni && (
+                            <div>
+                                <button
+                                    onClick={() => toggleMobileDropdown('alumni')}
+                                    className={`w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${isDropdownActive(["/memories", "/batch-mates"]) ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600" : ""
+                                        }`}
+                                >
+                                    <span>Alumni</span>
+                                    <ChevronDown className={`w-4 h-4 transition-transform ${mobileDropdownOpen === 'alumni' ? 'rotate-180' : ''
+                                        }`} />
+                                </button>
+                                {mobileDropdownOpen === 'alumni' && (
+                                    <div className="bg-gray-50 pl-4">
+                                        <Link
+                                            to="/memories"
+                                            className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                            onClick={closeMobileMenu}
+                                        >
+                                            Memories
+                                        </Link>
+                                        <Link
+                                            to="/batch-mates"
+                                            className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                            onClick={closeMobileMenu}
+                                        >
+                                            Batch Mates
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <Link to="/contact" className={mobileNavLinkClass("/contact")} onClick={closeMobileMenu}>
+                            Contact
+                        </Link>
+
+                        {/* Mobile Login/Logout Button */}
+                        <div className="px-4 py-3">
+                            {isAuthenticated ? (
+                                <button
+                                    onClick={() => {
+                                        logout();
+                                        closeMobileMenu();
+                                    }}
+                                    className="w-full bg-red-600 hover:bg-red-700 px-5 py-2 rounded-full text-white flex items-center justify-center gap-2 transition-colors shadow-sm"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span>Logout</span>
+                                </button>
+                            ) : (
+                                <Link
+                                    to="/login"
+                                    className="w-full bg-green-600 hover:bg-green-700 px-5 py-2 rounded-full text-white flex items-center justify-center gap-2 transition-colors shadow-sm"
+                                    onClick={closeMobileMenu}
+                                >
+                                    <User className="w-4 h-4" />
+                                    <span>Login / Register</span>
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </nav>
     );
 };
