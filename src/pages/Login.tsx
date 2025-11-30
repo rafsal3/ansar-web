@@ -1,18 +1,28 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { User, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
+    const navigate = useNavigate();
+    const { login } = useAuth();
     const [userType, setUserType] = useState<'alumni' | 'admin'>('alumni');
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
+    const [error, setError] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle login logic here
-        console.log('Login attempt:', { ...formData, userType });
+        setError('');
+
+        const success = login(formData.email, formData.password, userType);
+        if (success) {
+            navigate('/');
+        } else {
+            setError('Invalid email or password');
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,8 +49,8 @@ const Login = () => {
                             type="button"
                             onClick={() => setUserType('alumni')}
                             className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all ${userType === 'alumni'
-                                    ? 'bg-teal-600 text-white shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-900'
+                                ? 'bg-teal-600 text-white shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900'
                                 }`}
                         >
                             Alumni
@@ -49,8 +59,8 @@ const Login = () => {
                             type="button"
                             onClick={() => setUserType('admin')}
                             className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all ${userType === 'admin'
-                                    ? 'bg-teal-600 text-white shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-900'
+                                ? 'bg-teal-600 text-white shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900'
                                 }`}
                         >
                             Admin
@@ -120,6 +130,13 @@ const Login = () => {
                                 Forgot password?
                             </a>
                         </div>
+
+                        {/* Error Message */}
+                        {error && (
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                                <p className="text-sm text-red-600 text-center">{error}</p>
+                            </div>
+                        )}
 
                         {/* Submit Button */}
                         <button
