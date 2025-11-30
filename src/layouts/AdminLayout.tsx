@@ -10,7 +10,8 @@ import {
     LogOut,
     Menu,
     X,
-    Bell
+    Bell,
+    Image as ImageIcon
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -38,6 +39,7 @@ const AdminLayout = () => {
         { path: '/admin/courses', icon: BookOpen, label: 'Courses' },
         { path: '/admin/faculty', icon: Users, label: 'Faculty' },
         { path: '/admin/alumni', icon: GraduationCap, label: 'Alumni' },
+        { path: '/admin/memories', icon: ImageIcon, label: 'Memories' },
         { path: '/admin/notifications', icon: Bell, label: 'Notifications' },
     ];
 
