@@ -51,10 +51,13 @@ const Navbar = () => {
                             </Link>
                         </li>
                     </ul>
-                    <button className="bg-green-600 hover:bg-green-700 px-5 py-2 rounded-full text-white flex items-center gap-2 transition-colors shadow-sm">
+                    <Link
+                        to="/login"
+                        className="bg-green-600 hover:bg-green-700 px-5 py-2 rounded-full text-white flex items-center gap-2 transition-colors shadow-sm"
+                    >
                         <User className="w-4 h-4" />
                         <span>Login / Register</span>
-                    </button>
+                    </Link>
                 </div>
             </div>
         </nav>

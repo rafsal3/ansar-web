@@ -10,11 +10,18 @@ import Notifications from "@/pages/Notifications";
 import NotificationDetail from "@/pages/NotificationDetail";
 import Contact from "@/pages/Contact";
 import Faculty from "@/pages/Faculty";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import { Route, Routes } from "react-router-dom";
 
 function App() {
   return (
     <Routes>
+      {/* Auth Routes - No Layout */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      {/* Public Routes - With Layout */}
       <Route path="/" element={<PublicLayout />}>
         <Route index element={<Home />} />
         <Route path="about" element={<About />} />
