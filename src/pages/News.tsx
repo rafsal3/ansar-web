@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const News = () => {
     const [activeFilter, setActiveFilter] = useState('All');
@@ -73,8 +74,8 @@ const News = () => {
                             key={filter}
                             onClick={() => setActiveFilter(filter)}
                             className={`px-6 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${activeFilter === filter
-                                    ? 'bg-teal-600 text-white'
-                                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                                ? 'bg-teal-600 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                                 }`}
                         >
                             {filter}
@@ -104,9 +105,12 @@ const News = () => {
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h3>
                                 <p className="text-gray-600 mb-6 text-sm">{item.description}</p>
 
-                                <button className="flex items-center text-teal-600 font-medium text-sm hover:text-teal-700 transition-colors">
+                                <Link
+                                    to={`/news/${item.id}`}
+                                    className="flex items-center text-teal-600 font-medium text-sm hover:text-teal-700 transition-colors"
+                                >
                                     Read More <ArrowRight className="w-4 h-4 ml-2" />
-                                </button>
+                                </Link>
                             </div>
                         </div>
                     ))}

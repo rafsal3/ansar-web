@@ -2,6 +2,7 @@ import PublicLayout from "@/layouts/PublicLayout";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
 import News from "@/pages/News";
+import NewsDetail from "@/pages/NewsDetail";
 import Events from "@/pages/Events";
 import Courses from "@/pages/Courses";
 import Notifications from "@/pages/Notifications";
@@ -16,6 +17,7 @@ function App() {
         <Route index element={<Home />} />
         <Route path="about" element={<About />} />
         <Route path="news" element={<News />} />
+        <Route path="news/:id" element={<NewsDetail />} />
         <Route path="events" element={<Events />} />
         <Route path="courses" element={<Courses />} />
         <Route path="notifications" element={<Notifications />} />
