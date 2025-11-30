@@ -7,6 +7,7 @@ import Events from "@/pages/Events";
 import EventDetail from "@/pages/EventDetail";
 import Courses from "@/pages/Courses";
 import Notifications from "@/pages/Notifications";
+import NotificationDetail from "@/pages/NotificationDetail";
 import Contact from "@/pages/Contact";
 import Faculty from "@/pages/Faculty";
 import { Route, Routes } from "react-router-dom";
@@ -23,6 +24,7 @@ function App() {
         <Route path="events/:id" element={<EventDetail />} />
         <Route path="courses" element={<Courses />} />
         <Route path="notifications" element={<Notifications />} />
+        <Route path="notifications/:id" element={<NotificationDetail />} />
         <Route path="contact" element={<Contact />} />
         <Route path="faculty" element={<Faculty />} />
       </Route>

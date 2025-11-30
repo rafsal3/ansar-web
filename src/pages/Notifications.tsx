@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Bell } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Notifications = () => {
     const [activeFilter, setActiveFilter] = useState('ALL');
@@ -29,8 +30,8 @@ const Notifications = () => {
                                 key={filter}
                                 onClick={() => setActiveFilter(filter)}
                                 className={`px-6 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${activeFilter === filter
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                                     }`}
                             >
                                 {filter}
@@ -42,15 +43,16 @@ const Notifications = () => {
                 {/* Notifications List */}
                 <div className="space-y-4">
                     {notifications.map((notification) => (
-                        <div
+                        <Link
                             key={notification.id}
+                            to={`/notifications/${notification.id}`}
                             className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 flex items-center gap-4 cursor-pointer"
                         >
                             <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                                 <Bell className="w-5 h-5 text-blue-600" />
                             </div>
                             <h3 className="text-lg font-semibold text-gray-900">{notification.title}</h3>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             </div>
