@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowRight, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Events = () => {
     const [activeFilter, setActiveFilter] = useState('All');
@@ -76,8 +77,8 @@ const Events = () => {
                             key={filter}
                             onClick={() => setActiveFilter(filter)}
                             className={`px-6 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${activeFilter === filter
-                                    ? 'bg-teal-600 text-white'
-                                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                                ? 'bg-teal-600 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                                 }`}
                         >
                             {filter}
@@ -107,9 +108,12 @@ const Events = () => {
 
                                     <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                                         <span className="text-sm text-gray-500">⏰ {event.time}</span>
-                                        <button className="flex items-center text-teal-600 font-medium text-sm hover:text-teal-700 transition-colors">
+                                        <Link
+                                            to={`/events/${event.id}`}
+                                            className="flex items-center text-teal-600 font-medium text-sm hover:text-teal-700 transition-colors"
+                                        >
                                             Details <ArrowRight className="w-4 h-4 ml-2" />
-                                        </button>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -139,9 +143,12 @@ const Events = () => {
 
                                     <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                                         <span className="text-sm text-gray-500">⏰ {event.time}</span>
-                                        <button className="flex items-center text-gray-600 font-medium text-sm hover:text-gray-700 transition-colors">
+                                        <Link
+                                            to={`/events/${event.id}`}
+                                            className="flex items-center text-gray-600 font-medium text-sm hover:text-gray-700 transition-colors"
+                                        >
                                             Details <ArrowRight className="w-4 h-4 ml-2" />
-                                        </button>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
