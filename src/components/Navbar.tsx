@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { User } from "lucide-react";
 
 const Navbar = () => {
     return (
@@ -40,16 +41,20 @@ const Navbar = () => {
                             </Link>
                         </li>
                         <li>
-                            <Link to="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
-                                Contact
-                            </Link>
-                        </li>
-                        <li>
                             <Link to="/faculty" className="text-gray-700 hover:text-blue-600 transition-colors">
                                 Faculty
                             </Link>
                         </li>
+                        <li>
+                            <Link to="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
+                                Contact
+                            </Link>
+                        </li>
                     </ul>
+                    <button className="bg-green-600 hover:bg-green-700 px-5 py-2 rounded-full text-white flex items-center gap-2 transition-colors shadow-sm">
+                        <User className="w-4 h-4" />
+                        <span>Login / Register</span>
+                    </button>
                 </div>
             </div>
         </nav>
