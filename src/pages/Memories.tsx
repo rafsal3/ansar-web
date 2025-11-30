@@ -163,8 +163,8 @@ const Memories = () => {
                             key={page}
                             onClick={() => setCurrentPage(page)}
                             className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
-                                    ? 'bg-teal-600 text-white'
-                                    : 'hover:bg-gray-200 text-gray-700'
+                                ? 'bg-teal-600 text-white'
+                                : 'hover:bg-gray-200 text-gray-700'
                                 }`}
                         >
                             {page}
@@ -176,8 +176,8 @@ const Memories = () => {
                     <button
                         onClick={() => setCurrentPage(totalPages)}
                         className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === totalPages
-                                ? 'bg-teal-600 text-white'
-                                : 'hover:bg-gray-200 text-gray-700'
+                            ? 'bg-teal-600 text-white'
+                            : 'hover:bg-gray-200 text-gray-700'
                             }`}
                     >
                         {totalPages}
