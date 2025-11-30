@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser({ email, type: 'alumni', name: 'Alumni User' });
             return true;
         }
-        if (email === 'admin@gmail.com' && password === 'admin123' && userType === 'admin') {
+        if (email === 'admin@gmail.com' && password === '123' && userType === 'admin') {
             setUser({ email, type: 'admin', name: 'Admin User' });
             return true;
         }

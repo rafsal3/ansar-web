@@ -14,6 +14,14 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Memories from "@/pages/Memories";
 import BatchMates from "@/pages/BatchMates";
+import AdminLayout from "@/layouts/AdminLayout";
+import AdminDashboard from "@/pages/admin/Dashboard";
+import NewsAdmin from "@/pages/admin/NewsAdmin";
+import EventsAdmin from "@/pages/admin/EventsAdmin";
+import CoursesAdmin from "@/pages/admin/CoursesAdmin";
+import FacultyAdmin from "@/pages/admin/FacultyAdmin";
+import AlumniAdmin from "@/pages/admin/AlumniAdmin";
+import NotificationsAdmin from "@/pages/admin/NotificationsAdmin";
 import { Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -42,6 +50,17 @@ function App() {
           {/* Alumni Routes */}
           <Route path="memories" element={<Memories />} />
           <Route path="batch-mates" element={<BatchMates />} />
+        </Route>
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="news" element={<NewsAdmin />} />
+          <Route path="events" element={<EventsAdmin />} />
+          <Route path="courses" element={<CoursesAdmin />} />
+          <Route path="faculty" element={<FacultyAdmin />} />
+          <Route path="alumni" element={<AlumniAdmin />} />
+          <Route path="notifications" element={<NotificationsAdmin />} />
         </Route>
       </Routes>
     </AuthProvider>

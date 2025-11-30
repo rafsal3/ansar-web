@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
-    const { isAuthenticated, isAlumni, logout } = useAuth();
+    const { isAuthenticated, isAlumni, isAdmin, logout } = useAuth();
     const location = useLocation();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -177,6 +177,15 @@ const Navbar = () => {
                                 Contact
                             </Link>
                         </li>
+
+                        {/* Admin Dashboard Link */}
+                        {isAdmin && (
+                            <li>
+                                <Link to="/admin" className={navLinkClass("/admin")}>
+                                    Dashboard
+                                </Link>
+                            </li>
+                        )}
                     </ul>
 
                     {/* Desktop Login/Logout Button */}
@@ -307,6 +316,13 @@ const Navbar = () => {
                         <Link to="/contact" className={mobileNavLinkClass("/contact")} onClick={closeMobileMenu}>
                             Contact
                         </Link>
+
+                        {/* Admin Dashboard Link Mobile */}
+                        {isAdmin && (
+                            <Link to="/admin" className={mobileNavLinkClass("/admin")} onClick={closeMobileMenu}>
+                                Dashboard
+                            </Link>
+                        )}
 
                         {/* Mobile Login/Logout Button */}
                         <div className="px-4 py-3">

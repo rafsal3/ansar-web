@@ -19,7 +19,11 @@ const Login = () => {
 
         const success = login(formData.email, formData.password, userType);
         if (success) {
-            navigate('/');
+            if (userType === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
         } else {
             setError('Invalid email or password');
         }
