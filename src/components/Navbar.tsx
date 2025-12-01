@@ -199,13 +199,21 @@ const Navbar = () => {
                                 <span>Logout</span>
                             </button>
                         ) : (
-                            <Link
-                                to="/login"
-                                className="bg-green-600 hover:bg-green-700 px-5 py-2 rounded-full text-white flex items-center gap-2 transition-colors shadow-sm"
-                            >
-                                <User className="w-4 h-4" />
-                                <span>Login / Register</span>
-                            </Link>
+                            <div className="flex items-center gap-3">
+                                <Link
+                                    to="/login"
+                                    className="px-4 py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                                >
+                                    Login
+                                </Link>
+                                <Link
+                                    to="/register"
+                                    className="bg-teal-600 hover:bg-teal-700 px-5 py-2 rounded-full text-white flex items-center gap-2 transition-colors shadow-sm"
+                                >
+                                    <User className="w-4 h-4" />
+                                    <span>Alumni Registration</span>
+                                </Link>
+                            </div>
                         )}
                     </div>
 
@@ -338,14 +346,23 @@ const Navbar = () => {
                                     <span>Logout</span>
                                 </button>
                             ) : (
-                                <Link
-                                    to="/login"
-                                    className="w-full bg-green-600 hover:bg-green-700 px-5 py-2 rounded-full text-white flex items-center justify-center gap-2 transition-colors shadow-sm"
-                                    onClick={closeMobileMenu}
-                                >
-                                    <User className="w-4 h-4" />
-                                    <span>Login / Register</span>
-                                </Link>
+                                <div className="flex flex-col gap-3">
+                                    <Link
+                                        to="/login"
+                                        className="w-full border border-gray-300 hover:bg-gray-50 px-5 py-2 rounded-full text-gray-700 flex items-center justify-center gap-2 transition-colors shadow-sm"
+                                        onClick={closeMobileMenu}
+                                    >
+                                        <span>Login</span>
+                                    </Link>
+                                    <Link
+                                        to="/register"
+                                        className="w-full bg-teal-600 hover:bg-teal-700 px-5 py-2 rounded-full text-white flex items-center justify-center gap-2 transition-colors shadow-sm"
+                                        onClick={closeMobileMenu}
+                                    >
+                                        <User className="w-4 h-4" />
+                                        <span>Alumni Registration</span>
+                                    </Link>
+                                </div>
                             )}
                         </div>
                     </div>
