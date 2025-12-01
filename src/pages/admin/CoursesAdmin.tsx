@@ -11,9 +11,11 @@ interface CourseItem {
 
 const CoursesAdmin = () => {
     const [courses] = useState<CourseItem[]>([
-        { id: 1, name: 'B.Sc Computer Science', department: 'Computer Science', duration: '3 Years', seats: 60 },
-        { id: 2, name: 'B.Com Finance', department: 'Commerce', duration: '3 Years', seats: 120 },
-        { id: 3, name: 'BA English', department: 'English', duration: '3 Years', seats: 40 },
+        { id: 1, name: 'Science (PCMB)', department: 'Science', duration: '2 Years', seats: 60 },
+        { id: 2, name: 'Science (PCMC)', department: 'Science', duration: '2 Years', seats: 60 },
+        { id: 3, name: 'Commerce with Maths', department: 'Commerce', duration: '2 Years', seats: 60 },
+        { id: 4, name: 'Commerce with CA', department: 'Commerce', duration: '2 Years', seats: 60 },
+        { id: 5, name: 'Humanities', department: 'Humanities', duration: '2 Years', seats: 60 },
     ]);
 
     return (

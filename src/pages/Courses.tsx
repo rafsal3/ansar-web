@@ -6,57 +6,43 @@ const Courses = () => {
     const courses = [
         {
             id: 1,
-
-            title: 'B.Sc Computer Science',
-            department: 'Computer Science',
-            description: 'Foundations of computing and programming.',
-            duration: '3 Years',
-            seats: 30
+            title: 'Science (PCMB)',
+            department: 'Science',
+            description: 'Physics, Chemistry, Mathematics, and Biology. Ideal for medical and engineering aspirants.',
+            duration: '2 Years',
+            seats: 60
         },
         {
             id: 2,
-
-            title: 'B.Sc Computer Science',
-            department: 'Computer Science',
-            description: 'Foundations of computing and programming.',
-            duration: '3 Years',
-            seats: 30
+            title: 'Science (PCMC)',
+            department: 'Science',
+            description: 'Physics, Chemistry, Mathematics, and Computer Science. Perfect for engineering and tech enthusiasts.',
+            duration: '2 Years',
+            seats: 60
         },
         {
             id: 3,
-
-            title: 'B.Sc Computer Science',
-            department: 'Computer Science',
-            description: 'Foundations of computing and programming.',
-            duration: '3 Years',
-            seats: 30
+            title: 'Commerce with Maths',
+            department: 'Commerce',
+            description: 'Business Studies, Accountancy, Economics, and Mathematics. For finance and CA aspirants.',
+            duration: '2 Years',
+            seats: 60
         },
         {
             id: 4,
-
-            title: 'B.Sc Computer Science',
-            department: 'Computer Science',
-            description: 'Foundations of computing and programming.',
-            duration: '3 Years',
-            seats: 30
+            title: 'Commerce with Computer Application',
+            department: 'Commerce',
+            description: 'Business Studies, Accountancy, Economics, and Computer Application. Modern commerce education.',
+            duration: '2 Years',
+            seats: 60
         },
         {
             id: 5,
-
-            title: 'B.Sc Computer Science',
-            department: 'Computer Science',
-            description: 'Foundations of computing and programming.',
-            duration: '3 Years',
-            seats: 30
-        },
-        {
-            id: 6,
-
-            title: 'B.Sc Computer Science',
-            department: 'Computer Science',
-            description: 'Foundations of computing and programming.',
-            duration: '3 Years',
-            seats: 30
+            title: 'Humanities',
+            department: 'Humanities',
+            description: 'History, Economics, Political Science, and Sociology. For civil services and arts aspirants.',
+            duration: '2 Years',
+            seats: 60
         }
     ];
 
