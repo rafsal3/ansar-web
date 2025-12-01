@@ -8,8 +8,8 @@ const Register = () => {
         email: '',
         phone: '',
         graduationYear: '',
-        department: '',
-        degree: '',
+        stream: '',
+        class: '',
         password: '',
         confirmPassword: ''
     });
@@ -37,7 +37,7 @@ const Register = () => {
                 {/* Logo/Header */}
                 <div className="text-center mb-8">
                     <h2 className="text-4xl font-extrabold text-gray-900 mb-2">Alumni Registration</h2>
-                    <p className="text-gray-600">Join the Ansar College Alumni Network</p>
+                    <p className="text-gray-600">Join the Ansar Higher Secondary School Alumni Network</p>
                 </div>
 
                 {/* Registration Card */}
@@ -147,46 +147,42 @@ const Register = () => {
                                 {/* Department */}
                                 <div>
                                     <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Department *
+                                        Stream *
                                     </label>
                                     <select
-                                        id="department"
-                                        name="department"
+                                        id="stream"
+                                        name="stream"
                                         required
-                                        value={formData.department}
+                                        value={formData.stream}
                                         onChange={handleChange}
                                         className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                                     >
-                                        <option value="">Select Department</option>
-                                        <option value="Computer Science">Computer Science</option>
+                                        <option value="">Select Stream</option>
+                                        <option value="Science">Science</option>
                                         <option value="Commerce">Commerce</option>
-                                        <option value="English">English</option>
-                                        <option value="Mathematics">Mathematics</option>
-                                        <option value="Physics">Physics</option>
-                                        <option value="Chemistry">Chemistry</option>
+                                        <option value="Humanities">Humanities</option>
                                     </select>
                                 </div>
 
                                 {/* Degree */}
                                 <div className="md:col-span-2">
                                     <label htmlFor="degree" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Degree *
+                                        Class *
                                     </label>
                                     <select
-                                        id="degree"
-                                        name="degree"
+                                        id="class"
+                                        name="class"
                                         required
-                                        value={formData.degree}
+                                        value={formData.class}
                                         onChange={handleChange}
                                         className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                                     >
-                                        <option value="">Select Degree</option>
-                                        <option value="B.Sc">B.Sc</option>
-                                        <option value="B.Com">B.Com</option>
-                                        <option value="B.A">B.A</option>
-                                        <option value="M.Sc">M.Sc</option>
-                                        <option value="M.Com">M.Com</option>
-                                        <option value="M.A">M.A</option>
+                                        <option value="">Select Class</option>
+                                        <option value="12 A">12 A</option>
+                                        <option value="12 B">12 B</option>
+                                        <option value="12 C">12 C</option>
+                                        <option value="10 A">10 A</option>
+                                        <option value="10 B">10 B</option>
                                     </select>
                                 </div>
                             </div>

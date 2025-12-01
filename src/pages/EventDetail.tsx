@@ -12,7 +12,7 @@ const EventDetail = () => {
         title: 'Annual Cultural Fest 2024',
         description: 'Join us for a spectacular celebration of arts and culture.',
         time: '10:00 AM',
-        location: 'Main Auditorium, Ansar College',
+        location: 'Main Auditorium, Ansar Higher Secondary School',
         fullContent: `
             <p class="mb-4">We are excited to announce the Annual Cultural Fest 2024, a grand celebration of arts, culture, and creativity. This year's fest promises to be bigger and better than ever before.</p>
             

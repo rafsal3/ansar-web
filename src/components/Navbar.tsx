@@ -72,7 +72,7 @@ const Navbar = () => {
                         className="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors"
                         onClick={closeMobileMenu}
                     >
-                        Ansar College
+                        Ansar Higher Secondary School
                     </Link>
 
                     {/* Desktop Navigation */}

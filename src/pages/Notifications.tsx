@@ -1,18 +1,15 @@
-import { useState } from 'react';
 import { Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Notifications = () => {
-    const [activeFilter, setActiveFilter] = useState('ALL');
 
-    const filters = ['ALL', 'UG', 'PG', 'BOTH'];
 
     const notifications = [
-        { id: 1, title: 'FYUGP Major & Minor Courses' },
-        { id: 2, title: 'FOURTH SEMESTER CBCSS-UG BSC/BCA TIMETABLE' },
-        { id: 3, title: 'FOURTH SEMESTER CBCSS-UG BCOM TIMETABLE' },
-        { id: 4, title: 'FOURTH SEMESTER CBCSS-UG BBA TIMETABLE' },
-        { id: 5, title: 'Fourth Semester CBCSS- UG BA Timetable' },
+        { id: 1, title: 'Major & Minor Courses' },
+        { id: 2, title: 'FOURTH SEMESTER CBCSS BSC/BCA TIMETABLE' },
+        { id: 3, title: 'FOURTH SEMESTER CBCSS BCOM TIMETABLE' },
+        { id: 4, title: 'FOURTH SEMESTER CBCSS BBA TIMETABLE' },
+        { id: 5, title: 'Fourth Semester CBCSS BA Timetable' },
         { id: 6, title: 'Fourth Semester Exam Registration' }
     ];
 
@@ -24,20 +21,7 @@ const Notifications = () => {
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900">Notifications</h1>
 
                     {/* Filter Buttons */}
-                    <div className="flex flex-wrap gap-2 sm:gap-3">
-                        {filters.map((filter) => (
-                            <button
-                                key={filter}
-                                onClick={() => setActiveFilter(filter)}
-                                className={`px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors duration-200 ${activeFilter === filter
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                                    }`}
-                            >
-                                {filter}
-                            </button>
-                        ))}
-                    </div>
+
                 </div>
 
                 {/* Notifications List */}

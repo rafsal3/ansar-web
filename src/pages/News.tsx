@@ -13,7 +13,7 @@ const News = () => {
             date: '24 OCT 2024',
             category: 'Examination',
             title: 'Admission Open for 2024-25',
-            description: 'Applications are invited for UG and PG programs.',
+            description: 'Applications are invited for academic programs.',
             image: null // Placeholder
         },
         {
@@ -21,7 +21,7 @@ const News = () => {
             date: '24 OCT 2024',
             category: 'Examination',
             title: 'Admission Open for 2024-25',
-            description: 'Applications are invited for UG and PG programs.',
+            description: 'Applications are invited for academic programs.',
             image: null
         },
         {
@@ -29,7 +29,7 @@ const News = () => {
             date: '24 OCT 2024',
             category: 'Examination',
             title: 'Admission Open for 2024-25',
-            description: 'Applications are invited for UG and PG programs.',
+            description: 'Applications are invited for academic programs.',
             image: null
         },
         {
@@ -37,7 +37,7 @@ const News = () => {
             date: '24 OCT 2024',
             category: 'Examination',
             title: 'Admission Open for 2024-25',
-            description: 'Applications are invited for UG and PG programs.',
+            description: 'Applications are invited for academic programs.',
             image: null
         },
         {
@@ -45,7 +45,7 @@ const News = () => {
             date: '24 OCT 2024',
             category: 'Examination',
             title: 'Admission Open for 2024-25',
-            description: 'Applications are invited for UG and PG programs.',
+            description: 'Applications are invited for academic programs.',
             image: null
         },
         {
@@ -53,7 +53,7 @@ const News = () => {
             date: '24 OCT 2024',
             category: 'Examination',
             title: 'Admission Open for 2024-25',
-            description: 'Applications are invited for UG and PG programs.',
+            description: 'Applications are invited for academic programs.',
             image: null
         }
     ];

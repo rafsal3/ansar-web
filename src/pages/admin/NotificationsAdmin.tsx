@@ -11,7 +11,7 @@ interface NotificationItem {
 
 const NotificationsAdmin = () => {
     const [notifications] = useState<NotificationItem[]>([
-        { id: 1, title: 'Holiday Announcement', message: 'College will remain closed on Monday.', date: '2024-03-10', target: 'All' },
+        { id: 1, title: 'Holiday Announcement', message: 'School will remain closed on Monday.', date: '2024-03-10', target: 'All' },
         { id: 2, title: 'Exam Registration', message: 'Last date for exam registration is 20th March.', date: '2024-03-05', target: 'Students' },
         { id: 3, title: 'Alumni Meet Invitation', message: 'Join us for the annual alumni meet.', date: '2024-03-01', target: 'Alumni' },
     ]);

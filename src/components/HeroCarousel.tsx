@@ -12,7 +12,7 @@ interface Slide {
 const slides: Slide[] = [
     {
         id: 1,
-        title: "Welcome to Ansar College",
+        title: "Welcome to Ansar Higher Secondary School",
         subtitle: "Excellence in Education",
         image: "https://images.unsplash.com/photo-1562774053-701939374585?w=1920&q=80",
         gradient: "from-blue-600 via-purple-600 to-indigo-700",

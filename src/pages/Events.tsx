@@ -28,7 +28,7 @@ const Events = () => {
             id: 3,
             date: '25 DEC 2024',
             category: 'Sports',
-            title: 'Inter-College Sports Meet',
+            title: 'Inter-School Sports Meet',
             description: 'Annual sports competition with various events.',
             time: '8:00 AM'
         }

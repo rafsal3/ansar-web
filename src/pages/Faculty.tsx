@@ -21,7 +21,7 @@ const Faculty = () => {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl font-extrabold text-gray-900">Our Faculty & Staff</h1>
-                    <p className="mt-2 text-lg text-gray-600">Discover a wide range of undergraduate and postgraduate programs designed to launch your career.</p>
+                    <p className="mt-2 text-lg text-gray-600">Discover a wide range of academic programs designed to launch your career.</p>
                 </div>
 
                 {/* Controls */}

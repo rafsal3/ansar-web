@@ -5,7 +5,7 @@ const About = () => {
         <div className="bg-white">
             {/* Header Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <h1 className="text-4xl font-extrabold text-gray-900">About Ansar College</h1>
+                <h1 className="text-4xl font-extrabold text-gray-900">About Ansar Higher Secondary School</h1>
                 <p className="mt-2 text-lg text-gray-600">A legacy of excellence, integrity, and community service.</p>
             </div>
 
@@ -16,7 +16,7 @@ const About = () => {
                         <h2 className="text-2xl font-bold text-gray-900 mb-6">Our History</h2>
                         <div className="space-y-4 text-gray-600">
                             <p>
-                                Founded in 1995, Ansar College began with a humble vision to provide quality education to the rural community. Over the past three decades, it has grown into a premier institution offering a diverse range of undergraduate and postgraduate programs.
+                                Founded in 1995, Ansar Higher Secondary School began with a humble vision to provide quality education to the rural community. Over the past three decades, it has grown into a premier institution offering a diverse range of academic programs.
                             </p>
                             <p>
                                 Our campus has evolved from a single building to a sprawling complex with modern amenities, yet our core values of discipline, dedication, and excellence remain unchanged.
@@ -26,7 +26,7 @@ const About = () => {
                     <div className="relative h-64 lg:h-96 w-full">
                         <img
                             src="/images/library.png"
-                            alt="Ansar College Library"
+                            alt="Ansar Higher Secondary School Library"
                             className="absolute inset-0 w-full h-full object-cover rounded-3xl shadow-lg"
                         />
                     </div>
@@ -77,11 +77,11 @@ const About = () => {
                     </div>
                     <div className="w-full md:w-2/3 space-y-4">
                         <p className="text-gray-600 italic text-lg">
-                            "At Ansar College, we believe education is not just about acquiring knowledge but about igniting a lifelong passion for learning. We are committed to providing an environment where students can explore their potential and achieve their dreams."
+                            "At Ansar Higher Secondary School, we believe education is not just about acquiring knowledge but about igniting a lifelong passion for learning. We are committed to providing an environment where students can explore their potential and achieve their dreams."
                         </p>
                         <div>
                             <p className="font-bold text-gray-900">Dr. Alan Grant, Ph.D.</p>
-                            <p className="text-gray-500">Principal, Ansar College</p>
+                            <p className="text-gray-500">Principal, Ansar Higher Secondary School</p>
                         </div>
                     </div>
                 </div>

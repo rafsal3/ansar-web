@@ -17,7 +17,7 @@ const MemoriesAdmin = () => {
             id: 1,
             author: 'Rahul Kumar',
             batch: '2019-2022',
-            content: 'Had the best time of my life in the college canteen with friends!',
+            content: 'Had the best time of my life in the school canteen with friends!',
             date: '2024-03-15',
             status: 'Pending',
             hasImage: true
@@ -103,10 +103,10 @@ const MemoriesAdmin = () => {
                                     <td className="px-6 py-4 text-sm text-gray-600">{item.date}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-3 py-1 text-xs font-medium rounded-full ${item.status === 'Approved'
-                                                ? 'bg-green-100 text-green-700'
-                                                : item.status === 'Rejected'
-                                                    ? 'bg-red-100 text-red-700'
-                                                    : 'bg-yellow-100 text-yellow-700'
+                                            ? 'bg-green-100 text-green-700'
+                                            : item.status === 'Rejected'
+                                                ? 'bg-red-100 text-red-700'
+                                                : 'bg-yellow-100 text-yellow-700'
                                             }`}>
                                             {item.status}
                                         </span>

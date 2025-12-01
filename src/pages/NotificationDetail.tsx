@@ -9,30 +9,30 @@ const NotificationDetail = () => {
         id: id,
         date: '24 OCT 2024',
         category: 'Examination',
-        title: 'FYUGP Major & Minor Courses',
-        description: 'Important notification regarding FYUGP Major and Minor course selection.',
+        title: 'Subject Selection',
+        description: 'Important notification regarding subject selection.',
         fullContent: `
-            <p class="mb-4">This is to inform all students that the registration for FYUGP (Four Year Undergraduate Programme) Major and Minor courses for the academic year 2024-25 is now open.</p>
+            <p class="mb-4">This is to inform all students that the registration for subjects for the academic year 2024-25 is now open.</p>
             
             <h2 class="text-2xl font-bold text-gray-900 mb-3 mt-6">Important Instructions</h2>
             <ul class="list-disc list-inside mb-4 space-y-2">
                 <li>Students must carefully read the course descriptions before making their selection</li>
-                <li>Each student must select one Major and one Minor course</li>
+                <li>Each student must select their preferred subjects</li>
                 <li>Selections are subject to availability and eligibility criteria</li>
                 <li>Once submitted, changes will not be permitted</li>
             </ul>
             
             <h2 class="text-2xl font-bold text-gray-900 mb-3 mt-6">Eligibility</h2>
-            <p class="mb-4">All students enrolled in the FYUGP program are eligible to register for Major and Minor courses. Students must have completed their first semester with a minimum CGPA of 5.0.</p>
+            <p class="mb-4">All students enrolled in the Higher Secondary program are eligible to register for subjects. Students must have completed their first year with a minimum percentage of 50%.</p>
             
             <h2 class="text-2xl font-bold text-gray-900 mb-3 mt-6">Available Courses</h2>
-            <p class="mb-4">The list of available Major and Minor courses is available in the attached document. Students are advised to consult with their academic advisors before making their selection.</p>
+            <p class="mb-4">The list of available subjects is available in the attached document. Students are advised to consult with their academic advisors before making their selection.</p>
             
             <h2 class="text-2xl font-bold text-gray-900 mb-3 mt-6">Registration Process</h2>
             <ol class="list-decimal list-inside mb-4 space-y-2">
                 <li>Log in to the student portal</li>
                 <li>Navigate to the Course Registration section</li>
-                <li>Select your preferred Major and Minor courses</li>
+                <li>Select your preferred subjects</li>
                 <li>Submit the form before the deadline</li>
                 <li>Download and keep a copy of the confirmation receipt</li>
             </ol>
@@ -45,7 +45,7 @@ const NotificationDetail = () => {
                 <li>Classes Commencement: November 20, 2024</li>
             </ul>
             
-            <p class="mb-4">For any queries or clarifications, please contact the academic office during working hours or email at academics@ansarcollege.edu</p>
+            <p class="mb-4">For any queries or clarifications, please contact the academic office during working hours or email at academics@ansarhss.edu</p>
         `,
         attachments: [
             { name: 'FYUGP_Course_List.pdf', size: '2.5 MB' },

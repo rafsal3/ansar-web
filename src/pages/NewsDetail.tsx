@@ -10,20 +10,20 @@ const NewsDetail = () => {
         date: '24 OCT 2024',
         category: 'Examination',
         title: 'Admission Open for 2024-25',
-        description: 'Applications are invited for UG and PG programs.',
+        description: 'Applications are invited for academic programs.',
         fullContent: `
-            <p class="mb-4">We are pleased to announce that admissions are now open for the academic year 2024-25 for both Undergraduate (UG) and Postgraduate (PG) programs at Ansar College.</p>
+            <p class="mb-4">We are pleased to announce that admissions are now open for the academic year 2024-25 for various academic programs at Ansar Higher Secondary School.</p>
             
             <h2 class="text-2xl font-bold text-gray-900 mb-3 mt-6">Eligibility Criteria</h2>
-            <p class="mb-4">Candidates who have completed their higher secondary education (12th standard) are eligible to apply for UG programs. For PG programs, candidates must hold a bachelor's degree in the relevant field.</p>
+            <p class="mb-4">Candidates who have completed their 10th standard are eligible to apply for Higher Secondary programs.</p>
             
             <h2 class="text-2xl font-bold text-gray-900 mb-3 mt-6">Available Programs</h2>
             <ul class="list-disc list-inside mb-4 space-y-2">
-                <li>B.Sc Computer Science</li>
-                <li>B.Com Commerce</li>
-                <li>B.A English Literature</li>
-                <li>M.Sc Computer Science</li>
-                <li>M.Com Commerce</li>
+                <li>Science Stream (PCMB)</li>
+                <li>Science Stream (PCMC)</li>
+                <li>Commerce with Maths</li>
+                <li>Commerce with Computer Application</li>
+                <li>Humanities</li>
             </ul>
             
             <h2 class="text-2xl font-bold text-gray-900 mb-3 mt-6">How to Apply</h2>

@@ -58,7 +58,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-gray-900">Address</h3>
-                                    <p className="text-indigo-600">Ansar College Campus,<br />Education City, State - 123456</p>
+                                    <p className="text-indigo-600">Ansar Higher Secondary School Campus,<br />Education City, State - 123456</p>
                                 </div>
                             </div>
 
@@ -91,7 +91,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-gray-900">Email Us</h3>
-                                    <p className="text-indigo-600">info@ansarcollege.edu</p>
+                                    <p className="text-indigo-600">info@ansarhss.edu</p>
                                 </div>
                             </div>
 
@@ -102,7 +102,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-gray-900">Instagram</h3>
-                                    <p className="text-indigo-600">info@ansarcollege.edu</p>
+                                    <p className="text-indigo-600">info@ansarhss.edu</p>
                                 </div>
                             </div>
 
@@ -113,7 +113,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-gray-900">Facebook</h3>
-                                    <p className="text-indigo-600">info@ansarcollege.edu</p>
+                                    <p className="text-indigo-600">info@ansarhss.edu</p>
                                 </div>
                             </div>
 
@@ -124,7 +124,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-gray-900">Whatsapp</h3>
-                                    <p className="text-indigo-600">info@ansarcollege.edu</p>
+                                    <p className="text-indigo-600">info@ansarhss.edu</p>
                                 </div>
                             </div>
                         </div>
@@ -137,7 +137,7 @@ const Contact = () => {
                     <div className="w-full h-96 bg-gray-200 rounded-3xl overflow-hidden shadow-sm">
                         <img
                             src="/images/map.png"
-                            alt="College Location Map"
+                            alt="School Location Map"
                             className="w-full h-full object-cover"
                         />
                     </div>

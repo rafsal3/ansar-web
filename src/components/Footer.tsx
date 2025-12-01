@@ -8,7 +8,7 @@ const Footer = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {/* Ansar College Section */}
                     <div>
-                        <h3 className="text-xl font-bold mb-4">Ansar College</h3>
+                        <h3 className="text-xl font-bold mb-4">Ansar Higher Secondary School</h3>
                         <p className="text-teal-100 text-sm mb-6">
                             Committed to excellence in education and fostering holistic development of students since our establishment.
                         </p>
@@ -64,16 +64,7 @@ const Footer = () => {
                     <div>
                         <h3 className="text-xl font-bold mb-4">Academics</h3>
                         <ul className="space-y-2">
-                            <li>
-                                <a href="#" className="text-teal-100 hover:text-white transition-colors text-sm">
-                                    Undergraduate Programs
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" className="text-teal-100 hover:text-white transition-colors text-sm">
-                                    Postgraduate Programs
-                                </a>
-                            </li>
+
                             <li>
                                 <a href="#" className="text-teal-100 hover:text-white transition-colors text-sm">
                                     Research
@@ -99,7 +90,7 @@ const Footer = () => {
                             <li className="flex items-start gap-3">
                                 <MapPin className="w-5 h-5 text-teal-100 flex-shrink-0 mt-0.5" />
                                 <span className="text-teal-100 text-sm">
-                                    Ansar College Campus, Education District, City 000000
+                                    Ansar Higher Secondary School Campus, Education District, City 000000
                                 </span>
                             </li>
                             <li className="flex items-center gap-3">
@@ -111,7 +102,7 @@ const Footer = () => {
                             <li className="flex items-center gap-3">
                                 <Mail className="w-5 h-5 text-teal-100 flex-shrink-0" />
                                 <span className="text-teal-100 text-sm">
-                                    info@ansarcollege.edu
+                                    info@ansarhss.edu
                                 </span>
                             </li>
                         </ul>
@@ -123,7 +114,7 @@ const Footer = () => {
             <div className="border-t border-teal-600">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <p className="text-center text-teal-100 text-sm">
-                        © 2025 Ansar College. All rights reserved.
+                        © 2025 Ansar Higher Secondary School. All rights reserved.
                     </p>
                 </div>
             </div>

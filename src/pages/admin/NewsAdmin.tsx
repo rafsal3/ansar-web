@@ -11,7 +11,7 @@ interface NewsItem {
 
 const NewsAdmin = () => {
     const [news] = useState<NewsItem[]>([
-        { id: 1, title: 'College Annual Day Announced', date: '2024-03-15', category: 'Events', status: 'Published' },
+        { id: 1, title: 'School Annual Day Announced', date: '2024-03-15', category: 'Events', status: 'Published' },
         { id: 2, title: 'New Computer Lab Inauguration', date: '2024-03-10', category: 'Infrastructure', status: 'Published' },
         { id: 3, title: 'Exam Schedule Released', date: '2024-03-05', category: 'Academic', status: 'Draft' },
     ]);
