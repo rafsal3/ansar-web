@@ -14,6 +14,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Memories from "@/pages/Memories";
 import BatchMates from "@/pages/BatchMates";
+import EditProfile from "@/pages/EditProfile";
 import AdminLayout from "@/layouts/AdminLayout";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import NewsAdmin from "@/pages/admin/NewsAdmin";
@@ -51,6 +52,7 @@ function App() {
           {/* Alumni Routes */}
           <Route path="memories" element={<Memories />} />
           <Route path="batch-mates" element={<BatchMates />} />
+          <Route path="edit-profile" element={<EditProfile />} />
         </Route>
 
         {/* Admin Routes */}

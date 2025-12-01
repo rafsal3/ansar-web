@@ -213,6 +213,14 @@ const Navbar = () => {
                                                 <p className="text-xs text-teal-600 font-medium mt-1">Batch: {user.batch}</p>
                                             )}
                                         </div>
+                                        <Link
+                                            to="/edit-profile"
+                                            className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2 text-sm"
+                                        >
+                                            <User className="w-4 h-4" />
+                                            Edit Profile
+                                        </Link>
+                                        <div className="border-t border-gray-100 my-1"></div>
                                         <button
                                             onClick={logout}
                                             className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 text-sm"
@@ -377,6 +385,14 @@ const Navbar = () => {
                                             </div>
                                         )}
                                     </div>
+                                    <Link
+                                        to="/edit-profile"
+                                        className="w-full bg-white border border-gray-200 hover:bg-gray-50 px-5 py-2 rounded-full text-gray-700 flex items-center justify-center gap-2 transition-colors shadow-sm"
+                                        onClick={closeMobileMenu}
+                                    >
+                                        <User className="w-4 h-4" />
+                                        <span>Edit Profile</span>
+                                    </Link>
                                     <button
                                         onClick={() => {
                                             logout();
