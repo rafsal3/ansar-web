@@ -10,7 +10,7 @@ interface NewsItem {
 }
 
 const NewsAdmin = () => {
-    const [news, setNews] = useState<NewsItem[]>([
+    const [news] = useState<NewsItem[]>([
         { id: 1, title: 'College Annual Day Announced', date: '2024-03-15', category: 'Events', status: 'Published' },
         { id: 2, title: 'New Computer Lab Inauguration', date: '2024-03-10', category: 'Infrastructure', status: 'Published' },
         { id: 3, title: 'Exam Schedule Released', date: '2024-03-05', category: 'Academic', status: 'Draft' },
@@ -73,8 +73,8 @@ const NewsAdmin = () => {
                                     <td className="px-6 py-4 text-sm text-gray-600">{item.date}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-3 py-1 text-xs font-medium rounded-full ${item.status === 'Published'
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-yellow-100 text-yellow-700'
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-yellow-100 text-yellow-700'
                                             }`}>
                                             {item.status}
                                         </span>

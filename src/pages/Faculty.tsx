@@ -3,8 +3,8 @@ import { Search, ChevronDown, Mail } from 'lucide-react';
 
 const Faculty = () => {
     const [searchQuery, setSearchQuery] = useState('');
-    const [department, setDepartment] = useState('Department');
-    const [sort, setSort] = useState('Sort by A - Z');
+    const [department] = useState('Department');
+    const [sort] = useState('Sort by A - Z');
 
     // Mock data for faculty
     const facultyMembers = Array(8).fill({
