@@ -4,6 +4,7 @@ interface User {
     email: string;
     type: 'alumni' | 'admin';
     name?: string;
+    batch?: string;
 }
 
 interface AuthContextType {
@@ -23,7 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = (email: string, password: string, userType: 'alumni' | 'admin'): boolean => {
         // Dummy authentication
         if (email === 'alumni@gmail.com' && password === '123' && userType === 'alumni') {
-            setUser({ email, type: 'alumni', name: 'Alumni User' });
+            setUser({ email, type: 'alumni', name: 'Alumni User', batch: '2020-2023' });
             return true;
         }
         if (email === 'admin@gmail.com' && password === '123' && userType === 'admin') {
