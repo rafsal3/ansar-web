@@ -138,6 +138,12 @@ const Navbar = () => {
                             </Link>
                         </li>
 
+                        <li>
+                            <Link to="/contact" className={navLinkClass("/contact")}>
+                                Contact
+                            </Link>
+                        </li>
+
                         {/* Alumni Dropdown - Only show if user is alumni */}
                         {isAlumni && (
                             <li
@@ -189,11 +195,7 @@ const Navbar = () => {
                             </li>
                         )}
 
-                        <li>
-                            <Link to="/contact" className={navLinkClass("/contact")}>
-                                Contact
-                            </Link>
-                        </li>
+
 
                         {/* Admin Dashboard Link */}
                         {isAdmin && (
