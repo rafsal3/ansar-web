@@ -137,18 +137,13 @@ const OccupationAlumni = () => {
                                 </div>
 
                                 {/* Card Content */}
-                                <div className="pt-16 px-6 pb-6 text-center">
+                                <div className="pt-16 px-6 pb-8 text-center">
                                     <h3 className="text-xl font-bold text-gray-900 mb-1">
                                         {alumni.name}
                                     </h3>
-                                    <p className="text-sm text-teal-600 font-medium mb-6">
+                                    <p className="text-sm text-teal-600 font-medium">
                                         {alumni.occupation}
                                     </p>
-
-                                    {/* Action Button */}
-                                    <button className="w-full py-2.5 px-4 bg-white border border-teal-600 text-teal-600 font-medium rounded-xl hover:bg-teal-50 transition-all duration-300">
-                                        Connect
-                                    </button>
                                 </div>
                             </div>
                         ))}
