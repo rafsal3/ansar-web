@@ -10,6 +10,7 @@ const Register = () => {
         graduationYear: '',
         stream: '',
         class: '',
+        occupation: '',
         password: '',
         confirmPassword: ''
     });
@@ -183,6 +184,41 @@ const Register = () => {
                                         <option value="12 C">12 C</option>
                                         <option value="10 A">10 A</option>
                                         <option value="10 B">10 B</option>
+                                    </select>
+                                </div>
+
+                                {/* Occupation */}
+                                <div className="md:col-span-2">
+                                    <label htmlFor="occupation" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Current Occupation *
+                                    </label>
+                                    <select
+                                        id="occupation"
+                                        name="occupation"
+                                        required
+                                        value={formData.occupation}
+                                        onChange={handleChange}
+                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                    >
+                                        <option value="">Select Occupation</option>
+                                        <option value="Software Engineer">Software Engineer</option>
+                                        <option value="Doctor">Doctor</option>
+                                        <option value="Teacher">Teacher</option>
+                                        <option value="Business Owner">Business Owner</option>
+                                        <option value="Civil Engineer">Civil Engineer</option>
+                                        <option value="Mechanical Engineer">Mechanical Engineer</option>
+                                        <option value="Electrical Engineer">Electrical Engineer</option>
+                                        <option value="Nurse">Nurse</option>
+                                        <option value="Pharmacist">Pharmacist</option>
+                                        <option value="Lawyer">Lawyer</option>
+                                        <option value="Accountant">Accountant</option>
+                                        <option value="Architect">Architect</option>
+                                        <option value="Designer">Designer</option>
+                                        <option value="Marketing Professional">Marketing Professional</option>
+                                        <option value="Sales Professional">Sales Professional</option>
+                                        <option value="Government Employee">Government Employee</option>
+                                        <option value="Student">Student</option>
+                                        <option value="Other">Other</option>
                                     </select>
                                 </div>
                             </div>

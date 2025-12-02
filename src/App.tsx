@@ -24,6 +24,7 @@ import FacultyAdmin from "@/pages/admin/FacultyAdmin";
 import AlumniAdmin from "@/pages/admin/AlumniAdmin";
 import MemoriesAdmin from "@/pages/admin/MemoriesAdmin";
 import NotificationsAdmin from "@/pages/admin/NotificationsAdmin";
+import OccupationsAdmin from "@/pages/admin/OccupationsAdmin";
 import { Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -63,6 +64,7 @@ function App() {
           <Route path="courses" element={<CoursesAdmin />} />
           <Route path="faculty" element={<FacultyAdmin />} />
           <Route path="alumni" element={<AlumniAdmin />} />
+          <Route path="occupations" element={<OccupationsAdmin />} />
           <Route path="memories" element={<MemoriesAdmin />} />
           <Route path="notifications" element={<NotificationsAdmin />} />
         </Route>
