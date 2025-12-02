@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, Phone, GraduationCap, Calendar, Briefcase, MapPin } from 'lucide-react';
+import { ArrowLeft, Briefcase, ChevronDown } from 'lucide-react';
+import { occupationStats } from '@/data/occupations';
 
 interface AlumniMember {
     id: number;
@@ -40,6 +41,13 @@ const OccupationAlumni = () => {
         (alumni) => alumni.occupation.toLowerCase() === decodedOccupation.toLowerCase()
     );
 
+    const handleOccupationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedOccupation = e.target.value;
+        if (selectedOccupation) {
+            navigate(`/alumni/occupation/${encodeURIComponent(selectedOccupation)}`);
+        }
+    };
+
     // Get initials for avatar
     const getInitials = (name: string) => {
         return name
@@ -68,13 +76,31 @@ const OccupationAlumni = () => {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 font-medium mb-4 transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        Back to Home
-                    </button>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <button
+                            onClick={() => navigate('/occupations')}
+                            className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 font-medium transition-colors"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                            Back to Occupations
+                        </button>
+
+                        {/* Occupation Selector */}
+                        <div className="relative">
+                            <select
+                                value={decodedOccupation}
+                                onChange={handleOccupationChange}
+                                className="appearance-none bg-white border border-gray-200 text-gray-700 py-3 pl-4 pr-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm font-medium cursor-pointer min-w-[200px]"
+                            >
+                                {occupationStats.map((stat) => (
+                                    <option key={stat.occupation} value={stat.occupation}>
+                                        {stat.occupation}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                        </div>
+                    </div>
 
                     <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
                         <div className="flex items-center gap-4 mb-4">
@@ -111,42 +137,16 @@ const OccupationAlumni = () => {
                                 </div>
 
                                 {/* Card Content */}
-                                <div className="pt-16 px-6 pb-6">
+                                <div className="pt-16 px-6 pb-6 text-center">
                                     <h3 className="text-xl font-bold text-gray-900 mb-1">
                                         {alumni.name}
                                     </h3>
-                                    <p className="text-sm text-teal-600 font-medium mb-4">
+                                    <p className="text-sm text-teal-600 font-medium mb-6">
                                         {alumni.occupation}
                                     </p>
 
-                                    {/* Details */}
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                                            <Mail className="w-4 h-4 text-gray-400" />
-                                            <span className="truncate">{alumni.email}</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                                            <Phone className="w-4 h-4 text-gray-400" />
-                                            <span>{alumni.phone}</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                                            <GraduationCap className="w-4 h-4 text-gray-400" />
-                                            <span>{alumni.stream} - {alumni.class}</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                                            <Calendar className="w-4 h-4 text-gray-400" />
-                                            <span>Graduated {alumni.graduationYear}</span>
-                                        </div>
-                                        {alumni.location && (
-                                            <div className="flex items-center gap-3 text-sm text-gray-600">
-                                                <MapPin className="w-4 h-4 text-gray-400" />
-                                                <span>{alumni.location}</span>
-                                            </div>
-                                        )}
-                                    </div>
-
                                     {/* Action Button */}
-                                    <button className="mt-6 w-full py-3 px-4 bg-gradient-to-r from-teal-600 to-blue-600 text-white font-medium rounded-xl hover:from-teal-700 hover:to-blue-700 transition-all duration-300 shadow-md hover:shadow-lg">
+                                    <button className="w-full py-2.5 px-4 bg-white border border-teal-600 text-teal-600 font-medium rounded-xl hover:bg-teal-50 transition-all duration-300">
                                         Connect
                                     </button>
                                 </div>

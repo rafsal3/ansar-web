@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, Users, TrendingUp } from 'lucide-react';
+import { Briefcase, Users, TrendingUp, ArrowLeft } from 'lucide-react';
 import { occupationStats } from '@/data/occupations';
 
-const AlumniByOccupation = () => {
+const Occupations = () => {
     const navigate = useNavigate();
 
     const totalAlumni = occupationStats.reduce((sum, stat) => sum + stat.count, 0);
@@ -12,36 +12,46 @@ const AlumniByOccupation = () => {
     };
 
     return (
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 via-blue-50 to-teal-50">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-teal-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="text-center mb-12">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-100 text-teal-700 rounded-full text-sm font-semibold mb-4">
-                        <Users className="w-4 h-4" />
-                        Alumni Network
-                    </div>
-                    <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
-                        Our Alumni by Occupation
-                    </h2>
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Discover where our alumni are making an impact across various industries and professions
-                    </p>
+                <div className="mb-12">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 font-medium mb-8 transition-colors"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                        Back to Home
+                    </button>
 
-                    {/* Total Alumni Count */}
-                    <div className="mt-8 inline-flex items-center gap-3 px-6 py-4 bg-white rounded-2xl shadow-lg border border-gray-100">
-                        <div className="p-3 bg-gradient-to-br from-teal-500 to-blue-500 rounded-xl">
-                            <TrendingUp className="w-6 h-6 text-white" />
+                    <div className="text-center">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-100 text-teal-700 rounded-full text-sm font-semibold mb-4">
+                            <Users className="w-4 h-4" />
+                            Alumni Network
                         </div>
-                        <div className="text-left">
-                            <p className="text-sm text-gray-600 font-medium">Total Alumni</p>
-                            <p className="text-3xl font-bold text-gray-900">{totalAlumni}+</p>
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+                            All Occupations
+                        </h1>
+                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                            Explore our diverse alumni network across various industries and professions
+                        </p>
+
+                        {/* Total Alumni Count */}
+                        <div className="mt-8 inline-flex items-center gap-3 px-6 py-4 bg-white rounded-2xl shadow-lg border border-gray-100">
+                            <div className="p-3 bg-gradient-to-br from-teal-500 to-blue-500 rounded-xl">
+                                <TrendingUp className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="text-left">
+                                <p className="text-sm text-gray-600 font-medium">Total Alumni</p>
+                                <p className="text-3xl font-bold text-gray-900">{totalAlumni}+</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Occupation Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {occupationStats.slice(0, 4).map((stat) => (
+                    {occupationStats.map((stat) => (
                         <button
                             key={stat.occupation}
                             onClick={() => handleOccupationClick(stat.occupation)}
@@ -87,20 +97,9 @@ const AlumniByOccupation = () => {
                         </button>
                     ))}
                 </div>
-
-                {/* View All Link */}
-                <div className="text-center mt-12">
-                    <button
-                        onClick={() => navigate('/occupations')}
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-teal-600 to-blue-600 text-white font-semibold rounded-xl hover:from-teal-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                        <Users className="w-5 h-5" />
-                        View All Occupations
-                    </button>
-                </div>
             </div>
-        </section>
+        </div>
     );
 };
 
-export default AlumniByOccupation;
+export default Occupations;
