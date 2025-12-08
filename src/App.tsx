@@ -29,6 +29,7 @@ import NotificationsAdmin from "@/pages/admin/NotificationsAdmin";
 import OccupationsAdmin from "@/pages/admin/OccupationsAdmin";
 import { Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 function App() {
   return (
@@ -52,16 +53,46 @@ function App() {
           <Route path="contact" element={<Contact />} />
           <Route path="faculty" element={<Faculty />} />
 
-          {/* Alumni Routes */}
-          <Route path="memories" element={<Memories />} />
-          <Route path="batch-mates" element={<BatchMates />} />
-          <Route path="edit-profile" element={<EditProfile />} />
+          {/* Alumni-Only Routes - Require Alumni Login */}
+          <Route
+            path="memories"
+            element={
+              <ProtectedRoute requireAlumni>
+                <Memories />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="batch-mates"
+            element={
+              <ProtectedRoute requireAlumni>
+                <BatchMates />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="edit-profile"
+            element={
+              <ProtectedRoute requireAlumni>
+                <EditProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Public Alumni Pages */}
           <Route path="occupations" element={<Occupations />} />
           <Route path="alumni/occupation/:occupation" element={<OccupationAlumni />} />
         </Route>
 
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
+        {/* Admin Routes - Require Admin Login */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requireAdmin>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<AdminDashboard />} />
           <Route path="news" element={<NewsAdmin />} />
           <Route path="events" element={<EventsAdmin />} />

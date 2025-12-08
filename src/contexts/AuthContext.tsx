@@ -1,19 +1,21 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { getCurrentUser, logout as apiLogout } from '@/api';
 
 interface User {
-    email: string;
+    id: number;
+    phone: string;
     type: 'alumni' | 'admin';
-    name?: string;
-    batch?: string;
+    profileImage: string;
 }
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string, password: string, userType: 'alumni' | 'admin') => boolean;
+    login: () => boolean;
     logout: () => void;
     isAuthenticated: boolean;
     isAlumni: boolean;
     isAdmin: boolean;
+    setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,14 +23,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
 
-    const login = (email: string, password: string, userType: 'alumni' | 'admin'): boolean => {
-        // Dummy authentication
-        if (email === 'alumni@gmail.com' && password === '123' && userType === 'alumni') {
-            setUser({ email, type: 'alumni', name: 'Alumni User', batch: '2020-2023' });
-            return true;
+    // Load user from localStorage on mount
+    useEffect(() => {
+        const storedUser = getCurrentUser();
+        if (storedUser) {
+            setUser(storedUser);
         }
-        if (email === 'admin@gmail.com' && password === '123' && userType === 'admin') {
-            setUser({ email, type: 'admin', name: 'Admin User' });
+    }, []);
+
+    const login = (): boolean => {
+        // This is called after successful API login
+        // The actual API call is in Login.tsx
+        // This just updates the context with the user from localStorage
+        const storedUser = getCurrentUser();
+        if (storedUser) {
+            setUser(storedUser);
             return true;
         }
         return false;
@@ -36,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const logout = () => {
         setUser(null);
+        apiLogout(); // This clears localStorage and redirects
     };
 
     const value: AuthContextType = {
@@ -45,6 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: !!user,
         isAlumni: user?.type === 'alumni',
         isAdmin: user?.type === 'admin',
+        setUser,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

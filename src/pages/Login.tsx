@@ -6,7 +6,7 @@ import { login as apiLogin } from '@/api';
 
 const Login = () => {
     const navigate = useNavigate();
-    const { login: setAuthLogin } = useAuth();
+    const { setUser } = useAuth();
     const [userType, setUserType] = useState<'alumni' | 'admin'>('alumni');
     const [formData, setFormData] = useState({
         email: '',
@@ -34,11 +34,11 @@ const Login = () => {
                 return;
             }
 
-            // Update auth context with user data
-            setAuthLogin(formData.email, formData.password, userType);
+            // Update auth context with user data from API response
+            setUser(response.user);
 
             // Navigate based on user type
-            if (userType === 'admin') {
+            if (response.user.type === 'admin') {
                 navigate('/admin');
             } else {
                 navigate('/');

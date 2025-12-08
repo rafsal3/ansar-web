@@ -34,7 +34,7 @@ export interface RegisterData {
 
 // Login
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
-    const response = await apiClient.post('/login', credentials);
+    const response = await apiClient.post('auth/login', credentials);
 
     // Store tokens in localStorage
     if (response.data.accessToken) {
