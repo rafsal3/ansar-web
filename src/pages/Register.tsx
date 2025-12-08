@@ -1,28 +1,102 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { User, Lock, Mail, Phone, Calendar, GraduationCap, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, Lock, Mail, Phone, Calendar, GraduationCap, ArrowRight, Loader2, Upload } from 'lucide-react';
+import { createAlumni, getAllJobs, type Job } from '@/api';
 
 const Register = () => {
+    const navigate = useNavigate();
+    const [jobs, setJobs] = useState<Job[]>([]);
+    const [photo, setPhoto] = useState<File | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
         phone: '',
-        graduationYear: '',
-        stream: '',
-        class: '',
-        occupation: '',
+        startYear: '',
+        endYear: '',
+        course: '',
+        className: '',
+        jobId: '',
         password: '',
         confirmPassword: ''
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // Fetch jobs/occupations on mount
+    useEffect(() => {
+        const fetchJobs = async () => {
+            try {
+                const data = await getAllJobs();
+                setJobs(data);
+            } catch (err) {
+                console.error('Error fetching jobs:', err);
+            }
+        };
+        fetchJobs();
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle registration logic here
+        setError('');
+        setSuccess('');
+
+        // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
-            alert('Passwords do not match!');
+            setError('Passwords do not match!');
             return;
         }
-        console.log('Registration attempt:', formData);
+
+        setLoading(true);
+
+        try {
+            // Create FormData for file upload
+            const data = new FormData();
+            data.append('name', formData.fullName);
+            data.append('email', formData.email);
+            data.append('phone', formData.phone);
+            data.append('course', formData.course);
+            data.append('startYear', formData.startYear);
+            data.append('endYear', formData.endYear);
+            data.append('className', formData.className);
+            data.append('password', formData.password);
+            data.append('confirmPassword', formData.confirmPassword);
+            data.append('jobId', formData.jobId);
+
+            if (photo) {
+                data.append('photos', photo);
+            }
+
+            await createAlumni(data);
+
+            setSuccess('Registration successful! Redirecting to login...');
+
+            // Reset form
+            setFormData({
+                fullName: '',
+                email: '',
+                phone: '',
+                startYear: '',
+                endYear: '',
+                course: '',
+                className: '',
+                jobId: '',
+                password: '',
+                confirmPassword: ''
+            });
+            setPhoto(null);
+
+            // Redirect to login after 2 seconds
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
+        } catch (err: any) {
+            console.error('Registration error:', err);
+            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -30,6 +104,12 @@ const Register = () => {
             ...formData,
             [e.target.name]: e.target.value
         });
+    };
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setPhoto(e.target.files[0]);
+        }
     };
 
     return (
@@ -121,21 +201,45 @@ const Register = () => {
                                 Academic Information
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Graduation Year */}
+                                {/* Start Year */}
                                 <div>
-                                    <label htmlFor="graduationYear" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Graduation Year *
+                                    <label htmlFor="startYear" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Start Year *
                                     </label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                             <Calendar className="h-5 w-5 text-gray-400" />
                                         </div>
                                         <input
-                                            id="graduationYear"
-                                            name="graduationYear"
+                                            id="startYear"
+                                            name="startYear"
                                             type="number"
                                             required
-                                            value={formData.graduationYear}
+                                            value={formData.startYear}
+                                            onChange={handleChange}
+                                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                            placeholder="2020"
+                                            min="1950"
+                                            max="2024"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* End Year */}
+                                <div>
+                                    <label htmlFor="endYear" className="block text-sm font-medium text-gray-700 mb-2">
+                                        End Year *
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <Calendar className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="endYear"
+                                            name="endYear"
+                                            type="number"
+                                            required
+                                            value={formData.endYear}
                                             onChange={handleChange}
                                             className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                                             placeholder="2024"
@@ -145,81 +249,85 @@ const Register = () => {
                                     </div>
                                 </div>
 
-                                {/* Department */}
+                                {/* Course */}
                                 <div>
-                                    <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Stream *
+                                    <label htmlFor="course" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Course *
                                     </label>
-                                    <select
-                                        id="stream"
-                                        name="stream"
+                                    <input
+                                        id="course"
+                                        name="course"
+                                        type="text"
                                         required
-                                        value={formData.stream}
+                                        value={formData.course}
                                         onChange={handleChange}
                                         className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                    >
-                                        <option value="">Select Stream</option>
-                                        <option value="Science">Science</option>
-                                        <option value="Commerce">Commerce</option>
-                                        <option value="Humanities">Humanities</option>
-                                    </select>
+                                        placeholder="e.g., Computer Science, Commerce"
+                                    />
                                 </div>
 
-                                {/* Degree */}
-                                <div className="md:col-span-2">
-                                    <label htmlFor="degree" className="block text-sm font-medium text-gray-700 mb-2">
+                                {/* Class Name */}
+                                <div>
+                                    <label htmlFor="className" className="block text-sm font-medium text-gray-700 mb-2">
                                         Class *
                                     </label>
-                                    <select
-                                        id="class"
-                                        name="class"
+                                    <input
+                                        id="className"
+                                        name="className"
+                                        type="text"
                                         required
-                                        value={formData.class}
+                                        value={formData.className}
                                         onChange={handleChange}
                                         className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                    >
-                                        <option value="">Select Class</option>
-                                        <option value="12 A">12 A</option>
-                                        <option value="12 B">12 B</option>
-                                        <option value="12 C">12 C</option>
-                                        <option value="10 A">10 A</option>
-                                        <option value="10 B">10 B</option>
-                                    </select>
+                                        placeholder="e.g., 12 A, 10 B"
+                                    />
                                 </div>
 
-                                {/* Occupation */}
+                                {/* Occupation/Job */}
                                 <div className="md:col-span-2">
-                                    <label htmlFor="occupation" className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label htmlFor="jobId" className="block text-sm font-medium text-gray-700 mb-2">
                                         Current Occupation *
                                     </label>
                                     <select
-                                        id="occupation"
-                                        name="occupation"
+                                        id="jobId"
+                                        name="jobId"
                                         required
-                                        value={formData.occupation}
+                                        value={formData.jobId}
                                         onChange={handleChange}
                                         className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                                     >
                                         <option value="">Select Occupation</option>
-                                        <option value="Software Engineer">Software Engineer</option>
-                                        <option value="Doctor">Doctor</option>
-                                        <option value="Teacher">Teacher</option>
-                                        <option value="Business Owner">Business Owner</option>
-                                        <option value="Civil Engineer">Civil Engineer</option>
-                                        <option value="Mechanical Engineer">Mechanical Engineer</option>
-                                        <option value="Electrical Engineer">Electrical Engineer</option>
-                                        <option value="Nurse">Nurse</option>
-                                        <option value="Pharmacist">Pharmacist</option>
-                                        <option value="Lawyer">Lawyer</option>
-                                        <option value="Accountant">Accountant</option>
-                                        <option value="Architect">Architect</option>
-                                        <option value="Designer">Designer</option>
-                                        <option value="Marketing Professional">Marketing Professional</option>
-                                        <option value="Sales Professional">Sales Professional</option>
-                                        <option value="Government Employee">Government Employee</option>
-                                        <option value="Student">Student</option>
-                                        <option value="Other">Other</option>
+                                        {jobs.map((job) => (
+                                            <option key={job.id} value={job.id}>
+                                                {job.name}
+                                            </option>
+                                        ))}
                                     </select>
+                                </div>
+
+                                {/* Photo Upload */}
+                                <div className="md:col-span-2">
+                                    <label htmlFor="photo" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Profile Photo
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <Upload className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="photo"
+                                            name="photo"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handlePhotoChange}
+                                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                        />
+                                    </div>
+                                    {photo && (
+                                        <p className="mt-2 text-sm text-gray-600">
+                                            Selected: {photo.name}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -290,13 +398,37 @@ const Register = () => {
                             </label>
                         </div>
 
+                        {/* Error Message */}
+                        {error && (
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                                <p className="text-sm text-red-600 text-center">{error}</p>
+                            </div>
+                        )}
+
+                        {/* Success Message */}
+                        {success && (
+                            <div className="p-3 bg-green-50 border border-green-200 rounded-xl">
+                                <p className="text-sm text-green-600 text-center">{success}</p>
+                            </div>
+                        )}
+
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-teal-200"
+                            disabled={loading}
+                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-teal-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Register
-                            <ArrowRight className="w-5 h-5" />
+                            {loading ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    Registering...
+                                </>
+                            ) : (
+                                <>
+                                    Register
+                                    <ArrowRight className="w-5 h-5" />
+                                </>
+                            )}
                         </button>
                     </form>
 

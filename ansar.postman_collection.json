@@ -1,0 +1,690 @@
+{
+	"info": {
+		"_postman_id": "32cc718f-9b68-48c7-bf97-6b9be4a7d60d",
+		"name": "ansar",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "47150093",
+		"_collection_link": "https://nijusajeevnj-6673272.postman.co/workspace/Niju's-Workspace~79e2495d-162a-4606-8be5-bf6bf073770f/collection/47150093-32cc718f-9b68-48c7-bf97-6b9be4a7d60d?action=share&source=collection_link&creator=47150093"
+	},
+	"item": [
+		{
+			"name": "alumini",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": [
+						{
+							"key": "secret",
+							"value": "secretkey",
+							"type": "string"
+						},
+						{
+							"key": "payload",
+							"value": "{\r\n  \"sub\": 23,\r\n  \"phone\": \"1234567899\",\r\n  \"username\": \"yc\",\r\n  \"email\": \"yc@gmail.com\",\r\n  \"role\": \"alumni\",\r\n  \"tokenType\": \"access\"\r\n}",
+							"type": "string"
+						},
+						{
+							"key": "algorithm",
+							"value": "HS256",
+							"type": "string"
+						},
+						{
+							"key": "isSecretBase64Encoded",
+							"value": false,
+							"type": "boolean"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "headerPrefix",
+							"value": "Bearer",
+							"type": "string"
+						},
+						{
+							"key": "queryParamKey",
+							"value": "token",
+							"type": "string"
+						},
+						{
+							"key": "header",
+							"value": "{}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "id",
+							"value": "1",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "name",
+							"value": "zxyr",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "zxyr@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "phone",
+							"value": "9876543210",
+							"type": "text"
+						},
+						{
+							"key": "course",
+							"value": "Msc",
+							"type": "text"
+						},
+						{
+							"key": "startYear",
+							"value": "2020",
+							"type": "text"
+						},
+						{
+							"key": "endYear",
+							"value": "2022",
+							"type": "text"
+						},
+						{
+							"key": "className",
+							"value": "msc second year",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "123456",
+							"type": "text"
+						},
+						{
+							"key": "confirmPassword",
+							"value": "123456",
+							"type": "text"
+						},
+						{
+							"key": "createdAt",
+							"value": "2025-01-01T10:30:00.000Z",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "updatedAt",
+							"value": "2025-01-01T10:30:00.000Z",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "photos",
+							"type": "file",
+							"src": "/C:/Users/Admin/Desktop/tovino.jpg"
+						},
+						{
+							"key": "jobId",
+							"value": "1",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/alumini?jobId=1&limit=10&page=1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"alumini"
+					],
+					"query": [
+						{
+							"key": "jobId",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						},
+						{
+							"key": "page",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "memories",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "description",
+							"value": "test2",
+							"type": "text"
+						},
+						{
+							"key": "status",
+							"value": "active",
+							"type": "text"
+						},
+						{
+							"key": "photos",
+							"type": "file",
+							"src": [
+								"/C:/Users/Admin/Desktop/e.jpg",
+								"/C:/Users/Admin/Desktop/m.jpg"
+							]
+						},
+						{
+							"key": "userId",
+							"value": "3",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/memories/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"memories",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "view memories",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "description",
+							"value": "test2",
+							"type": "text"
+						},
+						{
+							"key": "status",
+							"value": "active",
+							"type": "text"
+						},
+						{
+							"key": "photos",
+							"type": "file",
+							"src": [
+								"/C:/Users/Admin/Desktop/e.jpg",
+								"/C:/Users/Admin/Desktop/m.jpg"
+							]
+						},
+						{
+							"key": "userId",
+							"value": "3",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/memories/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"memories",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "view alumini",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/alumini/delete/5",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"alumini",
+						"delete",
+						"5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "jobs",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "developer112",
+							"type": "text"
+						},
+						{
+							"key": "icon",
+							"type": "file",
+							"src": "/C:/Users/Admin/Desktop/e.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/job/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"job",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create-job",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "demo2",
+							"type": "text"
+						},
+						{
+							"key": "icon",
+							"type": "file",
+							"src": "/C:/Users/Admin/Desktop/e.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/job/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"job",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "testdemo",
+							"type": "text"
+						},
+						{
+							"key": "icon",
+							"type": "file",
+							"src": "/C:/Users/Admin/Desktop/e.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/job/20",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"job",
+						"20"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "description",
+							"value": "wer",
+							"type": "text"
+						},
+						{
+							"key": "status",
+							"value": "active",
+							"type": "text"
+						},
+						{
+							"key": "userId",
+							"value": "3",
+							"type": "text"
+						},
+						{
+							"key": "photos",
+							"type": "file",
+							"src": [
+								"/C:/Users/Admin/Desktop/dog.avif",
+								"/C:/Users/Admin/Desktop/e.jpg"
+							]
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/memories/delete/13",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"memories",
+						"delete",
+						"13"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "yc",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "yc@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "phone",
+							"value": "1234567899",
+							"type": "text"
+						},
+						{
+							"key": "course",
+							"value": "computer science",
+							"type": "text"
+						},
+						{
+							"key": "startYear",
+							"value": "2021",
+							"type": "text"
+						},
+						{
+							"key": "endYear",
+							"value": "2023",
+							"type": "text"
+						},
+						{
+							"key": "className",
+							"value": "msc",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "123456",
+							"type": "text"
+						},
+						{
+							"key": "confirmPassword",
+							"value": "123456",
+							"type": "text"
+						},
+						{
+							"key": "photos",
+							"type": "file",
+							"src": "/C:/Users/Admin/Desktop/e.jpg"
+						},
+						{
+							"key": "jobId",
+							"value": "20",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/alumini/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"alumini",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "notification",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "title",
+							"value": "enlgish exam notifications",
+							"type": "text"
+						},
+						{
+							"key": "message",
+							"value": "there is an exam tommorrow evening",
+							"type": "text"
+						},
+						{
+							"key": "audiance",
+							"value": "students",
+							"type": "text"
+						},
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/Admin/Desktop/e.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/notification/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"notification",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "Festival events season",
+							"type": "text"
+						},
+						{
+							"key": "location",
+							"value": "auditorium",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "status",
+							"value": "upcomingss",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "image",
+							"type": "file",
+							"src": "/C:/Users/Admin/Desktop/e.jpg",
+							"disabled": true
+						},
+						{
+							"key": "date",
+							"value": "2025-12-03",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/events/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"events",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "news",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "course",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "department",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}

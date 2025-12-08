@@ -1,31 +1,53 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { login as apiLogin } from '@/api';
 
 const Login = () => {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login: setAuthLogin } = useAuth();
     const [userType, setUserType] = useState<'alumni' | 'admin'>('alumni');
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
 
-        const success = login(formData.email, formData.password, userType);
-        if (success) {
+        try {
+            // Call the real API
+            const response = await apiLogin({
+                email: formData.email,
+                password: formData.password
+            });
+
+            // Check if user role matches selected type
+            if (response.user.role !== userType) {
+                setError(`Please login as ${response.user.role}`);
+                setLoading(false);
+                return;
+            }
+
+            // Update auth context with user data
+            setAuthLogin(formData.email, formData.password, userType);
+
+            // Navigate based on user type
             if (userType === 'admin') {
                 navigate('/admin');
             } else {
                 navigate('/');
             }
-        } else {
-            setError('Invalid email or password');
+        } catch (err: any) {
+            console.error('Login error:', err);
+            setError(err.response?.data?.message || 'Invalid email or password');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -145,10 +167,20 @@ const Login = () => {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-teal-200"
+                            disabled={loading}
+                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-teal-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Sign In
-                            <ArrowRight className="w-5 h-5" />
+                            {loading ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    Signing In...
+                                </>
+                            ) : (
+                                <>
+                                    Sign In
+                                    <ArrowRight className="w-5 h-5" />
+                                </>
+                            )}
                         </button>
                     </form>
 
