@@ -5,15 +5,17 @@ export interface LoginCredentials {
     password: string;
 }
 
+export interface User {
+    id: number;
+    phone: string;
+    type: 'alumni' | 'admin';
+    profileImage: string;
+}
+
 export interface LoginResponse {
-    token: string;
-    user: {
-        id: number;
-        name: string;
-        email: string;
-        phone: string;
-        role: 'alumni' | 'admin';
-    };
+    accessToken: string;
+    refreshToken: string;
+    user: User;
 }
 
 export interface RegisterData {
@@ -32,11 +34,13 @@ export interface RegisterData {
 
 // Login
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
-    const response = await apiClient.post('/auth/login', credentials);
+    const response = await apiClient.post('/login', credentials);
 
-    // Store token in localStorage
-    if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token);
+    // Store tokens in localStorage
+    if (response.data.accessToken) {
+        localStorage.setItem('authToken', response.data.accessToken);
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
     }
 
     return response.data;
@@ -55,13 +59,22 @@ export const register = async (data: FormData) => {
 // Logout
 export const logout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
     window.location.href = '/login';
 };
 
-// Get current user
-export const getCurrentUser = async () => {
-    const response = await apiClient.get('/me');
-    return response.data;
+// Get current user from localStorage
+export const getCurrentUser = (): User | null => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try {
+            return JSON.parse(userStr);
+        } catch (err) {
+            return null;
+        }
+    }
+    return null;
 };
 
 // Verify token

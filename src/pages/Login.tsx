@@ -27,9 +27,9 @@ const Login = () => {
                 password: formData.password
             });
 
-            // Check if user role matches selected type
-            if (response.user.role !== userType) {
-                setError(`Please login as ${response.user.role}`);
+            // Check if user type matches selected type
+            if (response.user.type !== userType) {
+                setError(`Please login as ${response.user.type}`);
                 setLoading(false);
                 return;
             }
