@@ -1,23 +1,42 @@
 import apiClient from './apiClient';
 
+export interface NewsImage {
+    id: number;
+    imageUrl: string;
+}
+
 export interface News {
-    id?: number;
+    id: number;
     title: string;
-    content: string;
-    image?: File | string;
+    category: string;
+    status: 'draft' | 'published';
+    images: NewsImage[];
+    date: string;
+    createdAt: string;
+    content?: string;
     author?: string;
-    publishedDate?: string;
-    createdAt?: string;
-    updatedAt?: string;
 }
 
 export interface NewsQueryParams {
     limit?: number;
     page?: number;
+    category?: string;
+    status?: string;
 }
 
-// Get all news
-export const getAllNews = async (params?: NewsQueryParams) => {
+export interface NewsPaginatedResponse {
+    message: string;
+    meta: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    };
+    data: News[];
+}
+
+// Get all news (paginated)
+export const getAllNews = async (params?: NewsQueryParams): Promise<NewsPaginatedResponse> => {
     const response = await apiClient.get('/news', { params });
     return response.data;
 };

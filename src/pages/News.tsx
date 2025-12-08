@@ -9,15 +9,24 @@ const News = () => {
     const [newsItems, setNewsItems] = useState<NewsType[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [totalPages, setTotalPages] = useState(1);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const filters = ['All', 'Academic', 'Admission', 'Cultural', 'Examination'];
+    const filters = ['All', 'Academic', 'Admission', 'Cultural', 'Examination', 'Events'];
 
     useEffect(() => {
         const fetchNews = async () => {
             try {
                 setLoading(true);
-                const data = await getAllNews({ limit: 50, page: 1 });
-                setNewsItems(data);
+                const response = await getAllNews({
+                    limit: 50,
+                    page: currentPage,
+                    category: activeFilter !== 'All' ? activeFilter.toLowerCase() : undefined
+                });
+
+                // Extract data from paginated response
+                setNewsItems(response.data);
+                setTotalPages(response.meta.totalPages);
             } catch (err: any) {
                 console.error('Error fetching news:', err);
                 setError('Failed to load news. Please try again later.');
@@ -27,11 +36,9 @@ const News = () => {
         };
 
         fetchNews();
-    }, []);
+    }, [currentPage, activeFilter]);
 
-    const filteredNews = activeFilter === 'All'
-        ? newsItems
-        : newsItems.filter(item => item.title?.toLowerCase().includes(activeFilter.toLowerCase()));
+    const filteredNews = newsItems;
 
     return (
         <div className="bg-gray-50 min-h-screen py-12">
@@ -80,9 +87,9 @@ const News = () => {
                                 <div key={item.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
                                     {/* Image */}
                                     <div className="h-48 bg-gray-200 w-full relative overflow-hidden">
-                                        {item.image ? (
+                                        {item.images && item.images.length > 0 ? (
                                             <img
-                                                src={typeof item.image === 'string' ? `${API_BASE_URL}${item.image}` : URL.createObjectURL(item.image)}
+                                                src={`${API_BASE_URL}${item.images[0].imageUrl}`}
                                                 alt={item.title}
                                                 className="w-full h-full object-cover"
                                             />
@@ -96,15 +103,15 @@ const News = () => {
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
                                             <span className="text-xs font-medium text-gray-500">
-                                                {item.publishedDate ? new Date(item.publishedDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase() : 'N/A'}
+                                                {new Date(item.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()}
                                             </span>
-                                            <span className="px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
-                                                News
+                                            <span className="px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full capitalize">
+                                                {item.category}
                                             </span>
                                         </div>
 
                                         <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{item.title}</h3>
-                                        <p className="text-gray-600 mb-6 text-sm line-clamp-3">{item.content}</p>
+                                        <p className="text-gray-600 mb-6 text-sm line-clamp-3">{item.content || 'No description available'}</p>
 
                                         <Link
                                             to={`/news/${item.id}`}
