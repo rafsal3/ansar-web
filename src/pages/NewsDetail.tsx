@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, Tag, Share2 } from 'lucide-react';
+import ImageSlider from '../components/ImageSlider';
 
 const NewsDetail = () => {
     const { id } = useParams();
@@ -39,7 +40,11 @@ const NewsDetail = () => {
             
             <p class="mb-4">For more information, please contact the admissions office or visit our campus during working hours.</p>
         `,
-        image: null
+        images: [
+            'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80',
+            'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80',
+            'https://images.unsplash.com/photo-1562774053-701939374585?w=800&q=80'
+        ]
     };
 
     return (
@@ -56,11 +61,9 @@ const NewsDetail = () => {
 
                 {/* News Article */}
                 <article className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                    {/* Image Placeholder */}
-                    <div className="h-96 bg-gray-200 w-full relative">
-                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                            <span className="text-sm">Image Placeholder</span>
-                        </div>
+                    {/* Image Slider */}
+                    <div className="w-full">
+                        <ImageSlider images={newsItem.images || []} />
                     </div>
 
                     <div className="p-8 md:p-12">
