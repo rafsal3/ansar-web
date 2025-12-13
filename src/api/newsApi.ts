@@ -1,5 +1,7 @@
 import apiClient from './apiClient';
 
+/* ================= TYPES ================= */
+
 export interface NewsImage {
     id: number;
     imageUrl: string;
@@ -9,7 +11,7 @@ export interface News {
     id: number;
     title: string;
     category: string;
-    status: 'draft' | 'published';
+    status: 'draft' | 'publish';
     images: NewsImage[];
     date: string;
     createdAt: string;
@@ -35,35 +37,73 @@ export interface NewsPaginatedResponse {
     data: News[];
 }
 
+/* ================= CREATE / UPDATE PAYLOAD ================= */
+
+export interface CreateNewsPayload {
+    title: string;
+    category: string;
+    status: 'draft' | 'publish';
+    date?: string;
+    images?: File[];
+}
+
+/* ================= HELPERS ================= */
+
+/**
+ * Converts CreateNewsPayload → FormData
+ */
+export const buildNewsFormData = (payload: CreateNewsPayload): FormData => {
+    const formData = new FormData();
+
+    formData.append('title', payload.title);
+    formData.append('category', payload.category);
+    formData.append('status', payload.status);
+
+    if (payload.date) {
+        formData.append('date', payload.date);
+    }
+
+    if (payload.images && payload.images.length > 0) {
+        payload.images.forEach((file) => {
+            formData.append('images', file); // MUST be "images"
+        });
+    }
+
+    return formData;
+};
+
+/* ================= API CALLS ================= */
+
 // Get all news (paginated)
-export const getAllNews = async (params?: NewsQueryParams): Promise<NewsPaginatedResponse> => {
+export const getAllNews = async (
+    params?: NewsQueryParams,
+): Promise<NewsPaginatedResponse> => {
     const response = await apiClient.get('/news', { params });
     return response.data;
 };
 
 // Get single news by ID
-export const getNewsById = async (id: number) => {
+export const getNewsById = async (id: number): Promise<News> => {
     const response = await apiClient.get(`/news/${id}`);
     return response.data;
 };
 
-// Create new news
-export const createNews = async (data: FormData) => {
-    const response = await apiClient.post('/news/create', data, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
+// Create news
+export const createNews = async (payload: CreateNewsPayload) => {
+    const formData = buildNewsFormData(payload);
+
+    const response = await apiClient.post('/news/create', formData);
     return response.data;
 };
 
 // Update news
-export const updateNews = async (id: number, data: FormData) => {
-    const response = await apiClient.put(`/news/${id}`, data, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
+export const updateNews = async (
+    id: number,
+    payload: CreateNewsPayload,
+) => {
+    const formData = buildNewsFormData(payload);
+
+    const response = await apiClient.put(`/news/${id}`, formData);
     return response.data;
 };
 

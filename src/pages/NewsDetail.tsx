@@ -1,51 +1,56 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, Tag, Share2 } from 'lucide-react';
 import ImageSlider from '../components/ImageSlider';
+import { getNewsById, News } from '../api/newsApi';
+import { API_BASE_URL } from '../api/apiClient';
 
 const NewsDetail = () => {
     const { id } = useParams();
+    const [newsItem, setNewsItem] = useState<News | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // Mock data - in a real app, this would come from an API based on the ID
-    const newsItem = {
-        id: id,
-        date: '24 OCT 2024',
-        category: 'Examination',
-        title: 'Admission Open for 2024-25',
-        description: 'Applications are invited for academic programs.',
-        fullContent: `
-            <p class="mb-4">We are pleased to announce that admissions are now open for the academic year 2024-25 for various academic programs at Ansar Higher Secondary School.</p>
-            
-            <h2 class="text-2xl font-bold text-gray-900 mb-3 mt-6">Eligibility Criteria</h2>
-            <p class="mb-4">Candidates who have completed their 10th standard are eligible to apply for Higher Secondary programs.</p>
-            
-            <h2 class="text-2xl font-bold text-gray-900 mb-3 mt-6">Available Programs</h2>
-            <ul class="list-disc list-inside mb-4 space-y-2">
-                <li>Science Stream (PCMB)</li>
-                <li>Science Stream (PCMC)</li>
-                <li>Commerce with Maths</li>
-                <li>Commerce with Computer Application</li>
-                <li>Humanities</li>
-            </ul>
-            
-            <h2 class="text-2xl font-bold text-gray-900 mb-3 mt-6">How to Apply</h2>
-            <p class="mb-4">Interested candidates can apply online through our official website. The application form is available in the admissions section. Please ensure all required documents are uploaded before submitting the application.</p>
-            
-            <h2 class="text-2xl font-bold text-gray-900 mb-3 mt-6">Important Dates</h2>
-            <ul class="list-disc list-inside mb-4 space-y-2">
-                <li>Application Start Date: October 24, 2024</li>
-                <li>Application End Date: November 30, 2024</li>
-                <li>Entrance Exam Date: December 15, 2024</li>
-                <li>Results Announcement: December 25, 2024</li>
-            </ul>
-            
-            <p class="mb-4">For more information, please contact the admissions office or visit our campus during working hours.</p>
-        `,
-        images: [
-            'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80',
-            'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80',
-            'https://images.unsplash.com/photo-1562774053-701939374585?w=800&q=80'
-        ]
-    };
+    useEffect(() => {
+        const fetchNewsDetail = async () => {
+            if (!id) return;
+            try {
+                const data = await getNewsById(Number(id));
+                setNewsItem(data);
+            } catch (err) {
+                console.error("Failed to fetch news detail:", err);
+                setError("Failed to load news article.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchNewsDetail();
+    }, [id]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-teal-600 text-lg">Loading article...</div>
+            </div>
+        );
+    }
+
+    if (error || !newsItem) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-red-500">{error || "Article not found"}</div>
+                <Link to="/news" className="ml-4 text-teal-600 hover:underline">
+                    Back to News
+                </Link>
+            </div>
+        );
+    }
+
+    // Prepare images for slider
+    const sliderImages = newsItem.images && newsItem.images.length > 0
+        ? newsItem.images.map(img => `${API_BASE_URL}${img.imageUrl}`)
+        : [];
 
     return (
         <div className="bg-gray-50 min-h-screen py-12">
@@ -63,7 +68,7 @@ const NewsDetail = () => {
                 <article className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                     {/* Image Slider */}
                     <div className="w-full">
-                        <ImageSlider images={newsItem.images || []} />
+                        <ImageSlider images={sliderImages} />
                     </div>
 
                     <div className="p-8 md:p-12">
@@ -71,11 +76,11 @@ const NewsDetail = () => {
                         <div className="flex flex-wrap items-center gap-4 mb-6">
                             <div className="flex items-center text-gray-500 text-sm">
                                 <Calendar className="w-4 h-4 mr-2" />
-                                {newsItem.date}
+                                {new Date(newsItem.date).toLocaleDateString()}
                             </div>
                             <div className="flex items-center">
                                 <Tag className="w-4 h-4 mr-2 text-blue-600" />
-                                <span className="px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
+                                <span className="px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full uppercase">
                                     {newsItem.category}
                                 </span>
                             </div>
@@ -86,10 +91,10 @@ const NewsDetail = () => {
                             {newsItem.title}
                         </h1>
 
-                        {/* Description */}
-                        <p className="text-xl text-gray-600 mb-8">
+                        {/* Description - if separate from content, otherwise maybe just content */}
+                        {/* <p className="text-xl text-gray-600 mb-8">
                             {newsItem.description}
-                        </p>
+                        </p> */}
 
                         {/* Divider */}
                         <div className="border-t border-gray-200 my-8"></div>
@@ -97,7 +102,7 @@ const NewsDetail = () => {
                         {/* Full Content */}
                         <div
                             className="prose prose-lg max-w-none text-gray-700"
-                            dangerouslySetInnerHTML={{ __html: newsItem.fullContent }}
+                            dangerouslySetInnerHTML={{ __html: newsItem.content || '' }}
                         />
 
                         {/* Share Section */}
@@ -113,8 +118,8 @@ const NewsDetail = () => {
                     </div>
                 </article>
 
-                {/* Related News Section */}
-                <div className="mt-12">
+                {/* Related News Section - Placeholder for now as API might not support it directly yet */}
+                {/* <div className="mt-12">
                     <h2 className="text-2xl font-bold text-gray-900 mb-6">Related News</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {[1, 2].map((item) => (
@@ -134,7 +139,7 @@ const NewsDetail = () => {
                             </Link>
                         ))}
                     </div>
-                </div>
+                </div> */}
             </div>
         </div>
     );
