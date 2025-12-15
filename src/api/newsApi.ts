@@ -85,7 +85,8 @@ export const getAllNews = async (
 // Get single news by ID
 export const getNewsById = async (id: number): Promise<News> => {
     const response = await apiClient.get(`/news/${id}`);
-    return response.data;
+    // Backend returns { message: string, data: News }
+    return response.data.data;
 };
 
 // Create news
