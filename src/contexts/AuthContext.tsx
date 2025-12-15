@@ -1,19 +1,14 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
-
-interface User {
-    email: string;
-    type: 'alumni' | 'admin';
-    name?: string;
-    batch?: string;
-}
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { adminLogin, alumniLogin, User } from '../api/authApi';
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string, password: string, userType: 'alumni' | 'admin') => boolean;
+    login: (email: string, password: string, userType: 'alumni' | 'admin') => Promise<boolean>;
     logout: () => void;
     isAuthenticated: boolean;
     isAlumni: boolean;
     isAdmin: boolean;
+    setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,20 +16,55 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
 
-    const login = (email: string, password: string, userType: 'alumni' | 'admin'): boolean => {
-        // Dummy authentication
-        if (email === 'alumni@gmail.com' && password === '123' && userType === 'alumni') {
-            setUser({ email, type: 'alumni', name: 'Alumni User', batch: '2020-2023' });
-            return true;
+    // Load user from localStorage on mount
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        const accessToken = localStorage.getItem('accessToken');
+
+        if (storedUser && accessToken) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (error) {
+                console.error('Failed to parse stored user:', error);
+                localStorage.removeItem('user');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+            }
         }
-        if (email === 'admin@gmail.com' && password === '123' && userType === 'admin') {
-            setUser({ email, type: 'admin', name: 'Admin User' });
+    }, []);
+
+    const login = async (email: string, password: string, userType: 'alumni' | 'admin'): Promise<boolean> => {
+        try {
+            let response;
+
+            if (userType === 'admin') {
+                response = await adminLogin({ email, password });
+            } else {
+                response = await alumniLogin({ email, password });
+            }
+
+            // Store tokens and user data
+            localStorage.setItem('accessToken', response.accessToken);
+            localStorage.setItem('refreshToken', response.refreshToken);
+            localStorage.setItem('user', JSON.stringify(response.user));
+
+            // Also store in the old format for backward compatibility with apiClient
+            localStorage.setItem('authToken', response.accessToken);
+
+            setUser(response.user);
             return true;
+        } catch (error) {
+            console.error('Login failed:', error);
+            return false;
         }
-        return false;
     };
 
     const logout = () => {
+        // Clear all auth data
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
         setUser(null);
     };
 
@@ -45,6 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: !!user,
         isAlumni: user?.type === 'alumni',
         isAdmin: user?.type === 'admin',
+        setUser,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

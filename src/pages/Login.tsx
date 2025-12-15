@@ -12,20 +12,28 @@ const Login = () => {
         password: ''
     });
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
 
-        const success = login(formData.email, formData.password, userType);
-        if (success) {
-            if (userType === 'admin') {
-                navigate('/admin');
+        try {
+            const success = await login(formData.email, formData.password, userType);
+            if (success) {
+                if (userType === 'admin') {
+                    navigate('/admin');
+                } else {
+                    navigate('/');
+                }
             } else {
-                navigate('/');
+                setError('Invalid email or password');
             }
-        } else {
-            setError('Invalid email or password');
+        } catch (err) {
+            setError('An error occurred during login. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -145,10 +153,11 @@ const Login = () => {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-teal-200"
+                            disabled={loading}
+                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-teal-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Sign In
-                            <ArrowRight className="w-5 h-5" />
+                            {loading ? 'Signing In...' : 'Sign In'}
+                            {!loading && <ArrowRight className="w-5 h-5" />}
                         </button>
                     </form>
 
