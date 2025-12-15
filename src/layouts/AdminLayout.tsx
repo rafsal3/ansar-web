@@ -20,18 +20,33 @@ const AdminLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const location = useLocation();
     const navigate = useNavigate();
-    const { logout, user, isAdmin } = useAuth();
+    const { logout, user, isAdmin, loading } = useAuth();
 
     useEffect(() => {
-        if (!isAdmin) {
+        // Wait for auth to finish loading before checking
+        if (!loading && !isAdmin) {
             navigate('/login');
         }
-    }, [isAdmin, navigate]);
+    }, [isAdmin, loading, navigate]);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
+
+    // Show loading state while checking authentication
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-gray-500">Loading...</div>
+            </div>
+        );
+    }
+
+    // If not admin after loading, don't render (will redirect)
+    if (!isAdmin) {
+        return null;
+    }
 
     const navItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
@@ -83,11 +98,13 @@ const AdminLayout = () => {
                     <div className="p-4 border-t border-gray-200">
                         <div className="flex items-center gap-3 px-4 py-3 mb-2">
                             <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold">
-                                {user?.name?.charAt(0) || 'A'}
+                                {user && 'name' in user && user.name ? user.name.charAt(0) : 'A'}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
-                                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                    {user && 'name' in user && user.name ? user.name : 'Admin'}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">{user?.phone}</p>
                             </div>
                         </div>
                         <button

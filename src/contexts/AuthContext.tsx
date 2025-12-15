@@ -9,12 +9,14 @@ interface AuthContextType {
     isAlumni: boolean;
     isAdmin: boolean;
     setUser: (user: User | null) => void;
+    loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
 
     // Load user from localStorage on mount
     useEffect(() => {
@@ -31,6 +33,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 localStorage.removeItem('refreshToken');
             }
         }
+
+        // Mark loading as complete
+        setLoading(false);
     }, []);
 
     const login = async (email: string, password: string, userType: 'alumni' | 'admin'): Promise<boolean> => {
@@ -76,6 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAlumni: user?.type === 'alumni',
         isAdmin: user?.type === 'admin',
         setUser,
+        loading,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

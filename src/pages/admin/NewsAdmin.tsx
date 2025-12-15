@@ -1,72 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Search, X, Upload, Image as ImageIcon } from 'lucide-react';
+import { getAllNews, News, createNews, updateNews, deleteNews, CreateNewsPayload } from '../../api/newsApi';
+import { API_BASE_URL } from '../../api/apiClient';
 
-interface NewsItem {
-    id: number;
-    title: string;
-    date: string;
-    category: string;
-    status: 'Published' | 'Draft';
-    images: string[];
-    content?: string;
-}
+
 
 const NewsAdmin = () => {
-    const [news, setNews] = useState<NewsItem[]>([
-        {
-            id: 1,
-            title: 'School Annual Day Announced',
-            date: '2024-03-15',
-            category: 'Events',
-            status: 'Published',
-            images: ['https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80']
-        },
-        {
-            id: 2,
-            title: 'New Computer Lab Inauguration',
-            date: '2024-03-10',
-            category: 'Infrastructure',
-            status: 'Published',
-            images: []
-        },
-        {
-            id: 3,
-            title: 'Exam Schedule Released',
-            date: '2024-03-05',
-            category: 'Academic',
-            status: 'Draft',
-            images: []
-        },
-    ]);
-
+    const [news, setNews] = useState<News[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
+    const [editingNews, setEditingNews] = useState<News | null>(null);
     const [previewImages, setPreviewImages] = useState<string[]>([]);
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+    // Search and filter states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('');
 
     // Form States
-    const [formData, setFormData] = useState<Partial<NewsItem>>({
+    const [formData, setFormData] = useState<Partial<CreateNewsPayload>>({
         title: '',
-        category: 'Events',
-        status: 'Draft',
-        content: '',
-        date: new Date().toISOString().split('T')[0]
+        category: 'academic',
+        status: 'draft',
+        date: new Date().toISOString().split('T')[0],
+        content: ''
     });
 
-    const handleOpenModal = (newsItem?: NewsItem) => {
+    // Fetch news on component mount
+    useEffect(() => {
+        fetchNews();
+    }, []);
+
+    const fetchNews = async () => {
+        try {
+            setLoading(true);
+            const response = await getAllNews({ status: 'publish,draft' });
+            setNews(response.data);
+            setError(null);
+        } catch (err) {
+            console.error('Failed to fetch news:', err);
+            setError('Failed to load news. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOpenModal = (newsItem?: News) => {
         if (newsItem) {
             setEditingNews(newsItem);
-            setFormData(newsItem);
-            setPreviewImages(newsItem.images || []);
+            setFormData({
+                title: newsItem.title,
+                category: newsItem.category,
+                status: newsItem.status,
+                date: newsItem.date,
+                content: newsItem.content || ''
+            });
+            // Set preview images from existing news
+            const imageUrls = newsItem.images?.map(img => `${API_BASE_URL}${img.imageUrl}`) || [];
+            setPreviewImages(imageUrls);
+            setUploadedFiles([]);
         } else {
             setEditingNews(null);
             setFormData({
                 title: '',
-                category: 'Events',
-                status: 'Draft',
-                content: '',
-                date: new Date().toISOString().split('T')[0]
+                category: 'academic',
+                status: 'draft',
+                date: new Date().toISOString().split('T')[0],
+                content: ''
             });
             setPreviewImages([]);
+            setUploadedFiles([]);
         }
         setIsModalOpen(true);
     };
@@ -74,6 +78,7 @@ const NewsAdmin = () => {
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files);
+            setUploadedFiles(prev => [...prev, ...files]);
             const newImageUrls = files.map(file => URL.createObjectURL(file));
             setPreviewImages(prev => [...prev, ...newImageUrls]);
         }
@@ -81,30 +86,78 @@ const NewsAdmin = () => {
 
     const removeImage = (index: number) => {
         setPreviewImages(prev => prev.filter((_, i) => i !== index));
+        setUploadedFiles(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // In a real app, you would upload images to server here
-        // and get back the URLs
 
-        const newItem: NewsItem = {
-            id: editingNews ? editingNews.id : Date.now(),
-            title: formData.title || '',
-            category: formData.category as string,
-            date: formData.date as string,
-            status: formData.status as 'Published' | 'Draft',
-            images: previewImages,
-            content: formData.content
-        };
+        try {
+            const payload: CreateNewsPayload = {
+                title: formData.title!,
+                category: formData.category!,
+                status: formData.status as 'draft' | 'publish',
+                date: formData.date,
+                content: formData.content,
+                images: uploadedFiles.length > 0 ? uploadedFiles : undefined
+            };
 
-        if (editingNews) {
-            setNews(news.map(n => n.id === editingNews.id ? newItem : n));
-        } else {
-            setNews([newItem, ...news]);
+            console.log('Submitting news with payload:', {
+                ...payload,
+                images: payload.images?.map(f => ({ name: f.name, size: f.size, type: f.type }))
+            });
+
+            if (editingNews) {
+                const result = await updateNews(editingNews.id, payload);
+                console.log('Update result:', result);
+            } else {
+                const result = await createNews(payload);
+                console.log('Create result:', result);
+            }
+
+            await fetchNews(); // Refresh the list
+            setIsModalOpen(false);
+        } catch (err: any) {
+            console.error('Failed to save news:', err);
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to save news. Please try again.';
+            alert(errorMessage);
         }
-        setIsModalOpen(false);
     };
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this news item?')) return;
+
+        try {
+            await deleteNews(id);
+            await fetchNews(); // Refresh the list
+        } catch (err) {
+            console.error('Failed to delete news:', err);
+            alert('Failed to delete news. Please try again.');
+        }
+    };
+
+    // Filter news based on search and category
+    const filteredNews = news.filter(item => {
+        const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = !categoryFilter || item.category === categoryFilter;
+        return matchesSearch && matchesCategory;
+    });
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <div className="text-gray-500">Loading news...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <div className="text-red-500">{error}</div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -129,13 +182,21 @@ const NewsAdmin = () => {
                     <input
                         type="text"
                         placeholder="Search news..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                 </div>
-                <select className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                >
                     <option value="">All Categories</option>
-                    <option value="Events">Events</option>
-                    <option value="Academic">Academic</option>
+                    <option value="academic">Academic</option>
+                    <option value="events">Events</option>
+                    <option value="sports">Sports</option>
+                    <option value="infrastructure">Infrastructure</option>
                 </select>
             </div>
 
@@ -154,46 +215,57 @@ const NewsAdmin = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {news.map((item) => (
-                                <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <p className="font-medium text-gray-900">{item.title}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
-                                            {item.category}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-600">{item.date}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-600">
-                                        <div className="flex items-center gap-1">
-                                            <ImageIcon className="w-4 h-4" />
-                                            <span>{item.images?.length || 0}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${item.status === 'Published'
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-yellow-100 text-yellow-700'
-                                            }`}>
-                                            {item.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={() => handleOpenModal(item)}
-                                                className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
-                                            >
-                                                <Pencil className="w-4 h-4" />
-                                            </button>
-                                            <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
+                            {filteredNews.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                                        No news found
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                filteredNews.map((item) => (
+                                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <p className="font-medium text-gray-900">{item.title}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                                                {item.category}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-600">{item.date}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                            <div className="flex items-center gap-1">
+                                                <ImageIcon className="w-4 h-4" />
+                                                <span>{item.images?.length || 0}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-3 py-1 text-xs font-medium rounded-full ${item.status === 'publish'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-yellow-100 text-yellow-700'
+                                                }`}>
+                                                {item.status === 'publish' ? 'Published' : 'Draft'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleOpenModal(item)}
+                                                    className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(item.id)}
+                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -236,21 +308,21 @@ const NewsAdmin = () => {
                                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                         className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
                                     >
-                                        <option value="Events">Events</option>
-                                        <option value="Academic">Academic</option>
-                                        <option value="Infrastructure">Infrastructure</option>
-                                        <option value="Sports">Sports</option>
+                                        <option value="academic">Academic</option>
+                                        <option value="events">Events</option>
+                                        <option value="infrastructure">Infrastructure</option>
+                                        <option value="sports">Sports</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                                     <select
                                         value={formData.status}
-                                        onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                                        onChange={(e) => setFormData({ ...formData, status: e.target.value as 'draft' | 'publish' })}
                                         className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
                                     >
-                                        <option value="Draft">Draft</option>
-                                        <option value="Published">Published</option>
+                                        <option value="draft">Draft</option>
+                                        <option value="publish">Publish</option>
                                     </select>
                                 </div>
                             </div>

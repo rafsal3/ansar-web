@@ -44,6 +44,7 @@ export interface CreateNewsPayload {
     category: string;
     status: 'draft' | 'publish';
     date?: string;
+    content?: string;
     images?: File[];
 }
 
@@ -61,6 +62,10 @@ export const buildNewsFormData = (payload: CreateNewsPayload): FormData => {
 
     if (payload.date) {
         formData.append('date', payload.date);
+    }
+
+    if (payload.content) {
+        formData.append('content', payload.content);
     }
 
     if (payload.images && payload.images.length > 0) {
@@ -93,7 +98,11 @@ export const getNewsById = async (id: number): Promise<News> => {
 export const createNews = async (payload: CreateNewsPayload) => {
     const formData = buildNewsFormData(payload);
 
-    const response = await apiClient.post('/news/create', formData);
+    const response = await apiClient.post('/news/create', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
     return response.data;
 };
 
@@ -104,7 +113,11 @@ export const updateNews = async (
 ) => {
     const formData = buildNewsFormData(payload);
 
-    const response = await apiClient.put(`/news/${id}`, formData);
+    const response = await apiClient.put(`/news/${id}`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
     return response.data;
 };
 
