@@ -34,6 +34,7 @@ export interface Alumni {
     name: string;
     email: string;
     phone: string;
+    isActive: boolean;
 }
 
 export interface AlumniPagination {
@@ -74,6 +75,11 @@ export const alumniApi = {
 
     getAllAlumni: async (page: number = 1, limit: number = 10) => {
         const response = await apiClient.get<AlumniResponse>(`/alumini?page=${page}&limit=${limit}`);
+        return response.data;
+    },
+
+    updateStatus: async (id: number, isActive: boolean) => {
+        const response = await apiClient.patch(`/admin/alumni/${id}/status`, { isActive });
         return response.data;
     }
 };
