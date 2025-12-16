@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Search, Mail, Phone, GraduationCap, X, Upload, Loader2, Check } from 'lucide-react';
-import { fetchAllFaculty, createFaculty, updateFaculty, deleteFaculty, Faculty, DEPARTMENT_IDS } from '../../api/facultyApi';
+import { fetchAllFaculty, createFaculty, updateFaculty, deleteFaculty, getFacultyById, Faculty, DEPARTMENT_IDS } from '../../api/facultyApi';
 import { getAllJobs, Job } from '../../api/jobApi';
 import { API_BASE_URL } from '../../api/apiClient';
 
@@ -88,20 +88,40 @@ const FacultyAdmin = () => {
         });
     };
 
-    const handleEdit = (faculty: Faculty) => {
-        setEditingId(faculty.id);
-        setFormData({
-            name: faculty.name,
-            qualification: faculty.qualification,
-            designation: faculty.designation,
-            email: faculty.email,
-            phone: faculty.phone.toString(),
-            jobId: faculty.jobId ? faculty.jobId.toString() : '',
-            departmentIds: faculty.departmentIds || []
-        });
-        setPhotoPreview(faculty.photo ? `${API_BASE_URL}${faculty.photo}` : null);
-        setPhotoFile(null);
-        setIsModalOpen(true);
+    const handleEdit = async (faculty: Faculty) => {
+        try {
+            // Show loading or just wait - could refine this UX later
+            const response = await getFacultyById(faculty.id);
+            const data = response.data;
+
+            setEditingId(data.id);
+
+            // Map department names to IDs
+            let deptIds: number[] = [];
+            if (data.departments && Array.isArray(data.departments)) {
+                deptIds = data.departments.map(deptName => {
+                    const dept = DEPARTMENT_IDS.find(d => d.name.toLowerCase() === deptName.toLowerCase());
+                    return dept ? dept.id : null;
+                }).filter((id): id is number => id !== null);
+            }
+
+            setFormData({
+                name: data.name,
+                qualification: data.qualification,
+                designation: data.designation,
+                email: data.email,
+                phone: data.phone.toString(),
+                jobId: data.jobId ? data.jobId.toString() : '',
+                departmentIds: deptIds
+            });
+
+            setPhotoPreview(data.photo ? `${API_BASE_URL}${data.photo}` : null);
+            setPhotoFile(null);
+            setIsModalOpen(true);
+        } catch (error) {
+            console.error("Failed to fetch faculty details:", error);
+            alert("Failed to load faculty details");
+        }
     };
 
     const handleDelete = async (id: number) => {

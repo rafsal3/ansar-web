@@ -11,6 +11,9 @@ export interface Faculty {
     createdAt: string;
     jobId?: number;
     departmentIds?: number[];
+    // For single faculty fetch response
+    departments?: string[];
+    jobName?: string;
 }
 
 export interface FacultyListResponse {
@@ -24,6 +27,11 @@ export interface FacultyListResponse {
         hasPrevPage: boolean;
     };
     data: Faculty[];
+}
+
+export interface SingleFacultyResponse {
+    message: string;
+    data: Faculty;
 }
 
 export const DEPARTMENT_IDS = [
@@ -45,6 +53,11 @@ export const fetchAllFaculty = async (page: number = 1, limit: number = 10, sear
     } catch (error) {
         throw error;
     }
+};
+
+export const getFacultyById = async (id: number): Promise<SingleFacultyResponse> => {
+    const response = await apiClient.get(`/faculty/${id}`);
+    return response.data;
 };
 
 export const createFaculty = async (data: {
