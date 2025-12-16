@@ -107,7 +107,9 @@ apiClient.interceptors.response.use(
                 localStorage.removeItem('user');
                 localStorage.removeItem('authToken');
 
-                window.location.href = '/login';
+                if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+                    window.location.href = '/login';
+                }
                 return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;

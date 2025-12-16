@@ -1,29 +1,47 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { User, Lock, Mail, Phone, Calendar, GraduationCap, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, Lock, Mail, Phone, Calendar, GraduationCap, ArrowRight, Briefcase, Upload, Loader2, BookOpen } from 'lucide-react';
+import { alumniApi } from '../api/alumniApi';
+import { getAllJobs, Job } from '../api/jobApi';
+import toast from 'react-hot-toast';
 
 const Register = () => {
+    const navigate = useNavigate();
+    const [jobs, setJobs] = useState<Job[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [fetchingJobs, setFetchingJobs] = useState(true);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
     const [formData, setFormData] = useState({
-        fullName: '',
+        name: '',
         email: '',
         phone: '',
-        graduationYear: '',
-        stream: '',
-        class: '',
-        occupation: '',
+        course: '',
+        startYear: '',
+        endYear: '',
+        className: '',
+        jobId: '',
         password: '',
         confirmPassword: ''
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Handle registration logic here
-        if (formData.password !== formData.confirmPassword) {
-            alert('Passwords do not match!');
-            return;
-        }
-        console.log('Registration attempt:', formData);
-    };
+    const [photo, setPhoto] = useState<File | null>(null);
+
+    useEffect(() => {
+        const fetchJobs = async () => {
+            try {
+                const response = await getAllJobs();
+                setJobs(response.data);
+            } catch (error) {
+                console.error('Failed to fetch jobs:', error);
+                toast.error('Failed to load occupations');
+            } finally {
+                setFetchingJobs(false);
+            }
+        };
+
+        fetchJobs();
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData({
@@ -32,9 +50,48 @@ const Register = () => {
         });
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setPhoto(file);
+            setPhotoPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (formData.password !== formData.confirmPassword) {
+            toast.error('Passwords do not match!');
+            return;
+        }
+
+        if (!photo) {
+            toast.error('Please upload a profile photo');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            await alumniApi.register({
+                ...formData,
+                photos: photo
+            });
+            toast.success('Registration successful! Please login.');
+            navigate('/login');
+        } catch (error: any) {
+            console.error('Registration failed:', error);
+            const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+            toast.error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-3xl mx-auto">
                 {/* Logo/Header */}
                 <div className="text-center mb-8">
                     <h2 className="text-4xl font-extrabold text-gray-900 mb-2">Alumni Registration</h2>
@@ -43,29 +100,62 @@ const Register = () => {
 
                 {/* Registration Card */}
                 <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Personal Information Section */}
                         <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 border-b pb-2">
                                 <User className="w-5 h-5 text-teal-600" />
                                 Personal Information
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Profile Photo Upload */}
+                                <div className="md:col-span-2 flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer relative bg-gray-50">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    />
+                                    {photoPreview ? (
+                                        <div className="text-center">
+                                            <img
+                                                src={photoPreview}
+                                                alt="Preview"
+                                                className="h-32 w-32 object-cover rounded-full mx-auto border-4 border-white shadow-md"
+                                            />
+                                            <p className="text-sm text-teal-600 mt-2 font-medium">Click to change photo</p>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-4">
+                                            <div className="mx-auto h-12 w-12 text-gray-400 flex items-center justify-center rounded-full bg-white shadow-sm mb-2">
+                                                <Upload className="h-6 w-6" />
+                                            </div>
+                                            <p className="text-sm font-medium text-gray-900">Upload Profile Photo</p>
+                                            <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* Full Name */}
                                 <div className="md:col-span-2">
-                                    <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                                         Full Name *
                                     </label>
-                                    <input
-                                        id="fullName"
-                                        name="fullName"
-                                        type="text"
-                                        required
-                                        value={formData.fullName}
-                                        onChange={handleChange}
-                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                        placeholder="John Doe"
-                                    />
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <User className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="name"
+                                            name="name"
+                                            type="text"
+                                            required
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                            placeholder="John Doe"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Email */}
@@ -107,7 +197,7 @@ const Register = () => {
                                             value={formData.phone}
                                             onChange={handleChange}
                                             className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                            placeholder="+91 1234567890"
+                                            placeholder="1234567890"
                                         />
                                     </div>
                                 </div>
@@ -116,119 +206,132 @@ const Register = () => {
 
                         {/* Academic Information Section */}
                         <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 border-b pb-2">
                                 <GraduationCap className="w-5 h-5 text-teal-600" />
                                 Academic Information
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Graduation Year */}
+                                {/* Course */}
+                                <div className="md:col-span-2">
+                                    <label htmlFor="course" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Course *
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <BookOpen className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="course"
+                                            name="course"
+                                            type="text"
+                                            required
+                                            value={formData.course}
+                                            onChange={handleChange}
+                                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                            placeholder="e.g. Computer Science, Science (PCMB)"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Class Name */}
+                                <div className="md:col-span-2">
+                                    <label htmlFor="className" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Class Name *
+                                    </label>
+                                    <input
+                                        id="className"
+                                        name="className"
+                                        type="text"
+                                        required
+                                        value={formData.className}
+                                        onChange={handleChange}
+                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                        placeholder="e.g. 12 A, Final Year MSc"
+                                    />
+                                </div>
+
+                                {/* Start Year */}
                                 <div>
-                                    <label htmlFor="graduationYear" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Graduation Year *
+                                    <label htmlFor="startYear" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Start Year *
                                     </label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                             <Calendar className="h-5 w-5 text-gray-400" />
                                         </div>
                                         <input
-                                            id="graduationYear"
-                                            name="graduationYear"
-                                            type="number"
+                                            id="startYear"
+                                            name="startYear"
+                                            type="text"
                                             required
-                                            value={formData.graduationYear}
+                                            value={formData.startYear}
                                             onChange={handleChange}
                                             className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                            placeholder="2024"
-                                            min="1950"
-                                            max="2024"
+                                            placeholder="e.g. 2021"
                                         />
                                     </div>
                                 </div>
 
-                                {/* Department */}
+                                {/* End Year */}
                                 <div>
-                                    <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Stream *
+                                    <label htmlFor="endYear" className="block text-sm font-medium text-gray-700 mb-2">
+                                        End Year (Graduation) *
                                     </label>
-                                    <select
-                                        id="stream"
-                                        name="stream"
-                                        required
-                                        value={formData.stream}
-                                        onChange={handleChange}
-                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                    >
-                                        <option value="">Select Stream</option>
-                                        <option value="Science">Science</option>
-                                        <option value="Commerce">Commerce</option>
-                                        <option value="Humanities">Humanities</option>
-                                    </select>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <Calendar className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="endYear"
+                                            name="endYear"
+                                            type="text"
+                                            required
+                                            value={formData.endYear}
+                                            onChange={handleChange}
+                                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                            placeholder="e.g. 2023"
+                                        />
+                                    </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                {/* Degree */}
-                                <div className="md:col-span-2">
-                                    <label htmlFor="degree" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Class *
-                                    </label>
-                                    <select
-                                        id="class"
-                                        name="class"
-                                        required
-                                        value={formData.class}
-                                        onChange={handleChange}
-                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                    >
-                                        <option value="">Select Class</option>
-                                        <option value="12 A">12 A</option>
-                                        <option value="12 B">12 B</option>
-                                        <option value="12 C">12 C</option>
-                                        <option value="10 A">10 A</option>
-                                        <option value="10 B">10 B</option>
-                                    </select>
-                                </div>
-
-                                {/* Occupation */}
-                                <div className="md:col-span-2">
-                                    <label htmlFor="occupation" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Current Occupation *
-                                    </label>
-                                    <select
-                                        id="occupation"
-                                        name="occupation"
-                                        required
-                                        value={formData.occupation}
-                                        onChange={handleChange}
-                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                    >
-                                        <option value="">Select Occupation</option>
-                                        <option value="Software Engineer">Software Engineer</option>
-                                        <option value="Doctor">Doctor</option>
-                                        <option value="Teacher">Teacher</option>
-                                        <option value="Business Owner">Business Owner</option>
-                                        <option value="Civil Engineer">Civil Engineer</option>
-                                        <option value="Mechanical Engineer">Mechanical Engineer</option>
-                                        <option value="Electrical Engineer">Electrical Engineer</option>
-                                        <option value="Nurse">Nurse</option>
-                                        <option value="Pharmacist">Pharmacist</option>
-                                        <option value="Lawyer">Lawyer</option>
-                                        <option value="Accountant">Accountant</option>
-                                        <option value="Architect">Architect</option>
-                                        <option value="Designer">Designer</option>
-                                        <option value="Marketing Professional">Marketing Professional</option>
-                                        <option value="Sales Professional">Sales Professional</option>
-                                        <option value="Government Employee">Government Employee</option>
-                                        <option value="Student">Student</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
+                        {/* Professional Information */}
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 border-b pb-2">
+                                <Briefcase className="w-5 h-5 text-teal-600" />
+                                Professional Information
+                            </h3>
+                            <div>
+                                <label htmlFor="jobId" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Current Occupation *
+                                </label>
+                                <select
+                                    id="jobId"
+                                    name="jobId"
+                                    required
+                                    value={formData.jobId}
+                                    onChange={handleChange}
+                                    disabled={fetchingJobs}
+                                    className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all disabled:bg-gray-100"
+                                >
+                                    <option value="">
+                                        {fetchingJobs ? 'Loading occupations...' : 'Select Occupation'}
+                                    </option>
+                                    {jobs.map((job) => (
+                                        <option key={job.id} value={job.id}>
+                                            {job.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
                         {/* Password Section */}
                         <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 border-b pb-2">
                                 <Lock className="w-5 h-5 text-teal-600" />
-                                Create Password
+                                Security
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Password */}
@@ -245,7 +348,7 @@ const Register = () => {
                                         onChange={handleChange}
                                         className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                                         placeholder="••••••••"
-                                        minLength={8}
+                                        minLength={6}
                                     />
                                 </div>
 
@@ -263,7 +366,7 @@ const Register = () => {
                                         onChange={handleChange}
                                         className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                                         placeholder="••••••••"
-                                        minLength={8}
+                                        minLength={6}
                                     />
                                 </div>
                             </div>
@@ -293,10 +396,20 @@ const Register = () => {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-teal-200"
+                            disabled={loading}
+                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-teal-200 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                            Register
-                            <ArrowRight className="w-5 h-5" />
+                            {loading ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    Registering...
+                                </>
+                            ) : (
+                                <>
+                                    Register
+                                    <ArrowRight className="w-5 h-5" />
+                                </>
+                            )}
                         </button>
                     </form>
 
