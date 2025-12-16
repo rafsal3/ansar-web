@@ -49,8 +49,9 @@ export const adminLogin = async (payload: AdminLoginPayload): Promise<LoginRespo
 /**
  * Alumni login (if you have a separate endpoint)
  */
+// Alumni login (updated to use the general /auth/login endpoint)
 export const alumniLogin = async (payload: AlumniLoginPayload): Promise<LoginResponse> => {
-    const response = await apiClient.post('/auth/alumni/login', payload);
+    const response = await apiClient.post('/auth/login', payload);
     return response.data;
 };
 
