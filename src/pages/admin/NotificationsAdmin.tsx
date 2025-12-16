@@ -30,6 +30,8 @@ const NotificationsAdmin = () => {
         audiance: 'students',
     });
 
+    const [submitting, setSubmitting] = useState(false);
+
     // Fetch notifications on component mount
     useEffect(() => {
         fetchNotifications();
@@ -91,7 +93,10 @@ const NotificationsAdmin = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (submitting) return;
+
         try {
+            setSubmitting(true);
             const payload: CreateNotificationPayload = {
                 title: formData.title!,
                 message: formData.message!,
@@ -118,6 +123,8 @@ const NotificationsAdmin = () => {
             console.error('Failed to save notification:', err);
             const errorMessage = err.response?.data?.message || err.message || 'Failed to save notification. Please try again.';
             alert(errorMessage);
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -374,14 +381,16 @@ const NotificationsAdmin = () => {
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
                                     className="px-6 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-medium"
+                                    disabled={submitting}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium"
+                                    className="px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={submitting}
                                 >
-                                    {editingNotification ? 'Save Changes' : 'Create Notification'}
+                                    {submitting ? 'Saving...' : (editingNotification ? 'Save Changes' : 'Create Notification')}
                                 </button>
                             </div>
                         </form>

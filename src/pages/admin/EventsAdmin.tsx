@@ -23,6 +23,8 @@ const EventsAdmin = () => {
         date: new Date().toISOString().split('T')[0]
     });
 
+    const [submitting, setSubmitting] = useState(false);
+
     // Fetch events on component mount
     useEffect(() => {
         fetchEvents();
@@ -88,7 +90,10 @@ const EventsAdmin = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (submitting) return;
+
         try {
+            setSubmitting(true);
             const payload: CreateEventPayload = {
                 name: formData.name!,
                 location: formData.location!,
@@ -116,6 +121,8 @@ const EventsAdmin = () => {
             console.error('Failed to save event:', err);
             const errorMessage = err.response?.data?.message || err.message || 'Failed to save event. Please try again.';
             alert(errorMessage);
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -355,14 +362,16 @@ const EventsAdmin = () => {
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
                                     className="px-6 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-medium"
+                                    disabled={submitting}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium"
+                                    className="px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={submitting}
                                 >
-                                    {editingEvent ? 'Save Changes' : 'Create Event'}
+                                    {submitting ? 'Saving...' : (editingEvent ? 'Save Changes' : 'Create Event')}
                                 </button>
                             </div>
                         </form>

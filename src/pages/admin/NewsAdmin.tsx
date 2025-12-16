@@ -27,6 +27,8 @@ const NewsAdmin = () => {
         content: ''
     });
 
+    const [submitting, setSubmitting] = useState(false);
+
     // Fetch news on component mount
     useEffect(() => {
         fetchNews();
@@ -92,7 +94,10 @@ const NewsAdmin = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (submitting) return;
+
         try {
+            setSubmitting(true);
             const payload: CreateNewsPayload = {
                 title: formData.title!,
                 category: formData.category!,
@@ -121,6 +126,8 @@ const NewsAdmin = () => {
             console.error('Failed to save news:', err);
             const errorMessage = err.response?.data?.message || err.message || 'Failed to save news. Please try again.';
             alert(errorMessage);
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -391,20 +398,23 @@ const NewsAdmin = () => {
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
                                     className="px-6 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-medium"
+                                    disabled={submitting}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium"
+                                    className="px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={submitting}
                                 >
-                                    {editingNews ? 'Save Changes' : 'Create News'}
+                                    {submitting ? 'Saving...' : (editingNews ? 'Save Changes' : 'Create News')}
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
+
         </div>
     );
 };
