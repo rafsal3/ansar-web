@@ -14,6 +14,44 @@ export interface AlumniRegisterData {
     photos: File;
 }
 
+export interface Job {
+    id: number;
+    name: string;
+}
+
+export interface Alumni {
+    id: number;
+    course: string;
+    startYear: number;
+    endYear: number;
+    className: string;
+    instagram: string | null;
+    facebook: string | null;
+    whatsapp: string | null;
+    job: Job | null;
+    photos: string[];
+    userId: number;
+    name: string;
+    email: string;
+    phone: string;
+}
+
+export interface AlumniPagination {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}
+
+export interface AlumniResponse {
+    message: string;
+    count: number;
+    data: Alumni[];
+    pagination: AlumniPagination;
+}
+
 export const alumniApi = {
     register: async (data: AlumniRegisterData) => {
         const formData = new FormData();
@@ -31,6 +69,11 @@ export const alumniApi = {
                 'Content-Type': 'multipart/form-data',
             },
         });
+        return response.data;
+    },
+
+    getAllAlumni: async (page: number = 1, limit: number = 10) => {
+        const response = await apiClient.get<AlumniResponse>(`/alumini?page=${page}&limit=${limit}`);
         return response.data;
     }
 };
