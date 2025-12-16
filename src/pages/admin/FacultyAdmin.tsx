@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Search, Mail, Phone, GraduationCap, X, Upload, Loader2, Check } from 'lucide-react';
-import { fetchAllFaculty, createFaculty, Faculty, DEPARTMENT_IDS } from '../../api/facultyApi';
+import { fetchAllFaculty, createFaculty, updateFaculty, deleteFaculty, Faculty, DEPARTMENT_IDS } from '../../api/facultyApi';
 import { getAllJobs, Job } from '../../api/jobApi';
 import { API_BASE_URL } from '../../api/apiClient';
 
@@ -10,10 +10,11 @@ const FacultyAdmin = () => {
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Create Modal State
+    // Create/Edit Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [jobs, setJobs] = useState<Job[]>([]);
+    const [editingId, setEditingId] = useState<number | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -87,11 +88,58 @@ const FacultyAdmin = () => {
         });
     };
 
+    const handleEdit = (faculty: Faculty) => {
+        setEditingId(faculty.id);
+        setFormData({
+            name: faculty.name,
+            qualification: faculty.qualification,
+            designation: faculty.designation,
+            email: faculty.email,
+            phone: faculty.phone.toString(),
+            jobId: faculty.jobId ? faculty.jobId.toString() : '',
+            departmentIds: faculty.departmentIds || []
+        });
+        setPhotoPreview(faculty.photo ? `${API_BASE_URL}${faculty.photo}` : null);
+        setPhotoFile(null);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!window.confirm('Are you sure you want to delete this faculty member?')) {
+            return;
+        }
+
+        try {
+            await deleteFaculty(id);
+            alert('Faculty member deleted successfully');
+            loadFaculty();
+        } catch (err) {
+            console.error('Failed to delete faculty:', err);
+            alert('Failed to delete faculty member');
+        }
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setEditingId(null);
+        setFormData({
+            name: '',
+            qualification: '',
+            designation: '',
+            email: '',
+            phone: '',
+            jobId: '',
+            departmentIds: []
+        });
+        setPhotoFile(null);
+        setPhotoPreview(null);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         // Validation
-        if (!photoFile) {
+        if (!editingId && !photoFile) {
             alert('Please select a photo');
             return;
         }
@@ -122,32 +170,28 @@ const FacultyAdmin = () => {
 
         try {
             setSubmitting(true);
-            await createFaculty({
-                ...formData,
-                photo: photoFile
-            });
+
+            if (editingId) {
+                await updateFaculty(editingId, {
+                    ...formData,
+                    photo: photoFile || undefined
+                });
+                alert('Faculty member updated successfully!');
+            } else {
+                if (!photoFile) return; // Should be caught by validation
+                await createFaculty({
+                    ...formData,
+                    photo: photoFile
+                });
+                alert('Faculty member created successfully!');
+            }
 
             // Reset form and close modal
-            setIsModalOpen(false);
-            setFormData({
-                name: '',
-                qualification: '',
-                designation: '',
-                email: '',
-                phone: '',
-                jobId: '',
-                departmentIds: []
-            });
-            setPhotoFile(null);
-            setPhotoPreview(null);
-
-            // Refresh list
+            closeModal();
             loadFaculty();
-            alert('Faculty member created successfully!');
         } catch (err: any) {
-            console.error('Failed to create faculty:', err);
-            // Show more specific error if available
-            const errorMessage = err.response?.data?.message || 'Failed to create faculty member';
+            console.error('Failed to save faculty:', err);
+            const errorMessage = err.response?.data?.message || 'Failed to save faculty member';
             alert(errorMessage);
         } finally {
             setSubmitting(false);
@@ -259,10 +303,16 @@ const FacultyAdmin = () => {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <button className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
+                                            <button
+                                                onClick={() => handleEdit(item)}
+                                                className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                            >
                                                 <Pencil className="w-4 h-4" />
                                             </button>
-                                            <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                            <button
+                                                onClick={() => handleDelete(item.id)}
+                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -274,14 +324,14 @@ const FacultyAdmin = () => {
                 </div>
             </div>
 
-            {/* Create Modal */}
+            {/* Create/Edit Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 overflow-y-auto">
                     <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                            <h2 className="text-xl font-bold text-gray-900">Add New Faculty</h2>
+                            <h2 className="text-xl font-bold text-gray-900">{editingId ? 'Edit Faculty' : 'Add New Faculty'}</h2>
                             <button
-                                onClick={() => setIsModalOpen(false)}
+                                onClick={closeModal}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                             >
                                 <X className="w-5 h-5 text-gray-500" />
@@ -416,7 +466,7 @@ const FacultyAdmin = () => {
                             <div className="pt-4 flex justify-end gap-3">
                                 <button
                                     type="button"
-                                    onClick={() => setIsModalOpen(false)}
+                                    onClick={closeModal}
                                     className="px-6 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
                                     disabled={submitting}
                                 >
@@ -433,7 +483,7 @@ const FacultyAdmin = () => {
                                             Saving...
                                         </>
                                     ) : (
-                                        'Create Faculty'
+                                        editingId ? 'Update Faculty' : 'Create Faculty'
                                     )}
                                 </button>
                             </div>

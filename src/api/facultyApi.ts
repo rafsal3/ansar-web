@@ -6,9 +6,11 @@ export interface Faculty {
     designation: string;
     qualification: string;
     email: string;
-    phone: number;
+    phone: string;
     photo: string;
     createdAt: string;
+    jobId?: number;
+    departmentIds?: number[];
 }
 
 export interface FacultyListResponse {
@@ -74,5 +76,43 @@ export const createFaculty = async (data: {
             'Content-Type': 'multipart/form-data',
         },
     });
+    return response.data;
+};
+
+export const updateFaculty = async (id: number, data: {
+    name?: string;
+    qualification?: string;
+    designation?: string;
+    email?: string;
+    phone?: string;
+    photo?: File;
+    departmentIds?: number[];
+    jobId?: string;
+}) => {
+    const formData = new FormData();
+    if (data.name) formData.append('name', data.name);
+    if (data.qualification) formData.append('qualification', data.qualification);
+    if (data.designation) formData.append('designation', data.designation);
+    if (data.email) formData.append('email', data.email);
+    if (data.phone) formData.append('phone', data.phone);
+    if (data.photo) formData.append('photo', data.photo);
+    if (data.jobId) formData.append('jobId', data.jobId);
+
+    if (data.departmentIds) {
+        data.departmentIds.forEach(deptId => {
+            formData.append('departmentIds[]', deptId.toString());
+        });
+    }
+
+    const response = await apiClient.put(`/faculty/${id}`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+};
+
+export const deleteFaculty = async (id: number) => {
+    const response = await apiClient.delete(`/faculty/delete/${id}`);
     return response.data;
 };
