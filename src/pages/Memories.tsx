@@ -48,7 +48,7 @@ const Memories = () => {
                 author: item.user.name,
                 batch: '', // Batch is not returned in listing API currently
                 date: new Date(item.createdAt).toLocaleDateString('en-US'),
-                image: item.photos.length > 0 ? `${API_BASE_URL}/${item.photos[0].url}` : null
+                image: item.photos.length > 0 ? `${API_BASE_URL}/uploads/${item.photos[0].url}` : null
             }));
 
             setAllMemories(formattedMemories);
