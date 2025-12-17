@@ -25,7 +25,7 @@ const AlumniAdmin = () => {
     const fetchAlumni = async (page: number) => {
         try {
             setLoading(true);
-            const response = await alumniApi.getAllAlumni(page);
+            const response = await alumniApi.getAllAlumniAdmin(page);
             setAlumni(response.data);
             setPagination(response.pagination);
             setError(null);

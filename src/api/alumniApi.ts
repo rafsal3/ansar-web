@@ -78,6 +78,11 @@ export const alumniApi = {
         return response.data;
     },
 
+    getAllAlumniAdmin: async (page: number = 1, limit: number = 10) => {
+        const response = await apiClient.get<AlumniResponse>(`/admin/alumni/all?page=${page}&limit=${limit}`);
+        return response.data;
+    },
+
     updateStatus: async (id: number, isActive: boolean) => {
         const response = await apiClient.patch(`/admin/alumni/${id}/status`, { isActive });
         return response.data;
