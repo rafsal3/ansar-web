@@ -10,6 +10,7 @@ export interface EventImage {
 export interface Event {
     id: number;
     name: string;
+    description?: string;
     location: string;
     status: 'upcoming' | 'completed';
     image?: string;
@@ -38,6 +39,7 @@ export interface EventPaginatedResponse {
 
 export interface CreateEventPayload {
     name: string;
+    description?: string;
     location: string;
     status: 'upcoming' | 'completed';
     date: string;
@@ -53,6 +55,9 @@ export const buildEventFormData = (payload: CreateEventPayload): FormData => {
     const formData = new FormData();
 
     formData.append('name', payload.name);
+    if (payload.description) {
+        formData.append('description', payload.description);
+    }
     formData.append('location', payload.location);
     formData.append('status', payload.status);
     formData.append('date', payload.date);
