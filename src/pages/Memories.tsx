@@ -99,13 +99,16 @@ const Memories = () => {
 
 
     const handleDeleteMemory = async (id: number): Promise<void> => {
-        if (window.confirm("Are you sure you want to delete this memory?")) {
+        if (window.confirm("Are you sure you want to delete this memory? This action cannot be undone.")) {
             try {
-                await memoryApi.deleteMemory(id);
+                const response = await memoryApi.deleteMyMemory(id);
+                // Remove from local state
                 setMyMemoriesList(myMemoriesList.filter(m => m.id !== id));
+                // Show success message
+                alert(response.message || "Memory deleted successfully");
             } catch (error) {
                 console.error("Failed to delete memory:", error);
-                alert("Failed to delete memory.");
+                alert("Failed to delete memory. Please try again.");
             }
         }
     };

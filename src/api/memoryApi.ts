@@ -160,4 +160,9 @@ export const memoryApi = {
         const response = await apiClient.delete(`/memories/delete/${id}`);
         return response.data;
     },
+
+    deleteMyMemory: async (id: number) => {
+        const response = await apiClient.delete<{ message: string }>(`/alumini/my-memories/${id}`);
+        return response.data;
+    },
 };
