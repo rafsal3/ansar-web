@@ -34,7 +34,7 @@ export interface Alumni {
     name: string;
     email: string;
     phone: string;
-    isActive: boolean;
+    isActive?: boolean;
 }
 
 export interface AlumniDetails {
