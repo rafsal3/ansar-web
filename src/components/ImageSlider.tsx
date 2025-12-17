@@ -3,9 +3,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ImageSliderProps {
     images: string[];
+    className?: string;
 }
 
-const ImageSlider = ({ images }: ImageSliderProps) => {
+const ImageSlider = ({ images, className = "h-[400px]" }: ImageSliderProps) => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const prevSlide = () => {
@@ -26,7 +27,7 @@ const ImageSlider = ({ images }: ImageSliderProps) => {
 
     if (!images || images.length === 0) {
         return (
-            <div className="h-96 bg-gray-200 w-full relative flex items-center justify-center rounded-xl overflow-hidden">
+            <div className={`bg-gray-200 w-full relative flex items-center justify-center rounded-xl overflow-hidden ${className}`}>
                 <div className="text-gray-400">
                     <span className="text-sm">No Images Available</span>
                 </div>
@@ -35,7 +36,7 @@ const ImageSlider = ({ images }: ImageSliderProps) => {
     }
 
     return (
-        <div className="h-[400px] w-full relative group rounded-xl overflow-hidden bg-gray-100">
+        <div className={`w-full relative group rounded-xl overflow-hidden bg-gray-100 ${className}`}>
             <div className="w-full h-full relative">
                 <img
                     src={images[currentIndex]}
@@ -72,8 +73,8 @@ const ImageSlider = ({ images }: ImageSliderProps) => {
                             key={slideIndex}
                             onClick={() => goToSlide(slideIndex)}
                             className={`transition-all duration-300 rounded-full shadow-sm ${currentIndex === slideIndex
-                                    ? "bg-white w-3 h-3"
-                                    : "bg-white/50 w-2 h-2 hover:bg-white/75"
+                                ? "bg-white w-3 h-3"
+                                : "bg-white/50 w-2 h-2 hover:bg-white/75"
                                 }`}
                         />
                     ))}

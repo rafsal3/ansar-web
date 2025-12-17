@@ -1,8 +1,10 @@
 import { useState, useEffect, ChangeEvent } from 'react';
 import { Upload, User, ChevronDown, ChevronLeft, ChevronRight, X, Image, Trash2 } from 'lucide-react';
+
 import { API_BASE_URL } from '../api/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import { memoryApi, PublicMemory } from '../api/memoryApi';
+import ImageSlider from '../components/ImageSlider';
 
 interface Memory {
     id: number;
@@ -11,7 +13,7 @@ interface Memory {
     author: string;
     batch: string;
     date: string;
-    image: string | null;
+    images: string[];
 }
 
 type TabType = 'all' | 'my';
@@ -48,7 +50,7 @@ const Memories = () => {
                 author: item.user.name,
                 batch: '', // Batch is not returned in listing API currently
                 date: new Date(item.createdAt).toLocaleDateString('en-US'),
-                image: item.photos.length > 0 ? `${API_BASE_URL}/uploads/${item.photos[0].url}` : null
+                images: item.photos.length > 0 ? item.photos.map(p => `${API_BASE_URL}/uploads/${p.url}`) : []
             }));
 
             setAllMemories(formattedMemories);
@@ -124,7 +126,10 @@ const Memories = () => {
                     author: (user && 'name' in user && user.name) ? user.name : 'You',
                     batch: (user && 'batch' in user && user.batch) ? user.batch : selectedBatch,
                     date: new Date(response.data.data.createdAt).toLocaleDateString('en-US'),
-                    image: response.data.data.photos.length > 0 ? response.data.data.photos[0] : null
+                    images: response.data.data.photos.length > 0 ?
+                        response.data.data.photos.map((p: any) =>
+                            typeof p === 'string' ? `${API_BASE_URL}/uploads/${p}` : `${API_BASE_URL}/uploads/${p.url}`
+                        ) : []
                 };
 
                 setMyMemories([newMemory, ...myMemories]);
@@ -239,17 +244,10 @@ const Memories = () => {
                             ) : (
                                 allMemories.map((memory) => (
                                     <div key={memory.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
-                                        {/* Image Placeholder */}
-                                        <div className="h-64 bg-gray-100 w-full relative overflow-hidden">
-                                            {memory.image ? (
-                                                <img
-                                                    src={memory.image}
-                                                    alt={memory.title}
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=No+Image';
-                                                    }}
-                                                />
+                                        {/* Image Slider or Single Image */}
+                                        <div className="h-64 w-full relative overflow-hidden">
+                                            {memory.images && memory.images.length > 0 ? (
+                                                <ImageSlider images={memory.images} className="h-64" />
                                             ) : (
                                                 <div className="bg-gradient-to-br from-gray-200 to-gray-300 w-full h-full flex items-center justify-center text-gray-400">
                                                     <span className="text-sm">No Image</span>
@@ -381,14 +379,10 @@ const Memories = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {myMemories.map((memory) => (
                                     <div key={memory.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
-                                        {/* Image Placeholder */}
-                                        <div className="h-64 bg-gray-100 w-full relative overflow-hidden">
-                                            {memory.image ? (
-                                                <img
-                                                    src={memory.image} // Note: This might need to be a full URL if returning a relative path
-                                                    alt={memory.title}
-                                                    className="w-full h-full object-cover"
-                                                />
+                                        {/* Image Slider */}
+                                        <div className="h-64 w-full relative overflow-hidden">
+                                            {memory.images && memory.images.length > 0 ? (
+                                                <ImageSlider images={memory.images} className="h-64" />
                                             ) : (
                                                 <div className="bg-gradient-to-br from-purple-200 to-purple-300 w-full h-full flex items-center justify-center text-purple-600">
                                                     <span className="text-sm font-medium">Your Memory</span>
