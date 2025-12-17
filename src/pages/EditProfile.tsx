@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Mail, Phone, Calendar, GraduationCap, Save, ArrowLeft } from 'lucide-react';
+import { User, Mail, Phone, Calendar, GraduationCap, Save, ArrowLeft, Camera } from 'lucide-react';
 import { alumniApi, AlumniProfile } from '@/api/alumniApi';
 import { API_BASE_URL } from '@/api/apiClient';
 
 const EditProfile = () => {
     const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [profileData, setProfileData] = useState<AlumniProfile | null>(null);
+    const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -19,7 +23,9 @@ const EditProfile = () => {
         jobId: '',
         instagram: '',
         facebook: '',
-        whatsapp: ''
+        whatsapp: '',
+        password: '',
+        confirmPassword: ''
     });
 
     useEffect(() => {
@@ -42,7 +48,9 @@ const EditProfile = () => {
                     jobId: data.job?.id.toString() || '',
                     instagram: data.instagram || '',
                     facebook: data.facebook || '',
-                    whatsapp: data.whatsapp || ''
+                    whatsapp: data.whatsapp || '',
+                    password: '',
+                    confirmPassword: ''
                 });
             } catch (err: any) {
                 console.error('Error fetching profile:', err);
@@ -55,11 +63,60 @@ const EditProfile = () => {
         fetchProfileData();
     }, []);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle profile update logic here
-        console.log('Profile update attempt:', formData);
-        alert('Profile updated successfully!');
+
+        // Validate password fields if provided
+        if (formData.password || formData.confirmPassword) {
+            if (formData.password !== formData.confirmPassword) {
+                setError('Passwords do not match');
+                return;
+            }
+        }
+
+        try {
+            setSubmitting(true);
+            setError(null);
+            setSuccessMessage(null);
+
+            const updateData = {
+                name: formData.fullName,
+                email: formData.email,
+                phone: formData.phone,
+                course: formData.course,
+                startYear: formData.startYear,
+                endYear: formData.endYear,
+                className: formData.className,
+                jobId: formData.jobId,
+                instagram: formData.instagram,
+                facebook: formData.facebook,
+                whatsapp: formData.whatsapp,
+                password: formData.password || undefined,
+                confirmPassword: formData.confirmPassword || undefined,
+                photo: selectedPhoto || undefined
+            };
+
+            const response = await alumniApi.updateAlumniProfile(updateData);
+            setSuccessMessage(response.message || 'Profile updated successfully!');
+
+            // Refresh profile data
+            const updatedData = await alumniApi.getAlumniMe();
+            setProfileData(updatedData);
+
+            // Clear password fields and photo selection
+            setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+            setSelectedPhoto(null);
+            setPhotoPreview(null);
+
+            // Scroll to top to show success message
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err: any) {
+            console.error('Error updating profile:', err);
+            setError(err.response?.data?.message || 'Failed to update profile');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -67,6 +124,19 @@ const EditProfile = () => {
             ...formData,
             [e.target.name]: e.target.value
         });
+    };
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedPhoto(file);
+            // Create preview URL
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPhotoPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     if (loading) {
@@ -117,24 +187,51 @@ const EditProfile = () => {
 
                 {/* Edit Profile Card */}
                 <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+                    {/* Success Message */}
+                    {successMessage && (
+                        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                            <p className="text-green-800 text-sm font-medium">{successMessage}</p>
+                        </div>
+                    )}
+
+                    {/* Error Message */}
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                            <p className="text-red-800 text-sm font-medium">{error}</p>
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Profile Photo Section */}
-                        {profileData?.photos && profileData.photos.length > 0 && (
-                            <div className="flex flex-col items-center mb-6">
-                                <div className="relative">
-                                    <img
-                                        src={`${API_BASE_URL}${profileData.photos[0]}`}
-                                        alt={profileData.name}
-                                        className="w-32 h-32 rounded-full object-cover border-4 border-teal-500 shadow-lg"
-                                    />
-                                    <div className="absolute bottom-0 right-0 w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center border-2 border-white">
-                                        <User className="w-4 h-4 text-white" />
-                                    </div>
-                                </div>
-                                <p className="mt-3 text-sm font-medium text-gray-700">{profileData.name}</p>
-                                <p className="text-xs text-gray-500">{profileData.email}</p>
+                        <div className="flex flex-col items-center mb-6">
+                            <div className="relative">
+                                <img
+                                    src={photoPreview || (profileData?.photos && profileData.photos.length > 0
+                                        ? `${API_BASE_URL}${profileData.photos[0]}`
+                                        : '/default-avatar.png')}
+                                    alt={profileData?.name || 'Profile'}
+                                    className="w-32 h-32 rounded-full object-cover border-4 border-teal-500 shadow-lg"
+                                />
+                                <label
+                                    htmlFor="photo-upload"
+                                    className="absolute bottom-0 right-0 w-10 h-10 bg-teal-600 hover:bg-teal-700 rounded-full flex items-center justify-center border-2 border-white cursor-pointer transition-colors"
+                                >
+                                    <Camera className="w-5 h-5 text-white" />
+                                </label>
+                                <input
+                                    id="photo-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handlePhotoChange}
+                                    className="hidden"
+                                />
                             </div>
-                        )}
+                            <p className="mt-3 text-sm font-medium text-gray-700">{profileData?.name}</p>
+                            <p className="text-xs text-gray-500">{profileData?.email}</p>
+                            {selectedPhoto && (
+                                <p className="mt-2 text-xs text-teal-600">New photo selected: {selectedPhoto.name}</p>
+                            )}
+                        </div>
 
                         {/* Personal Information Section */}
                         <div>
@@ -374,13 +471,64 @@ const EditProfile = () => {
                             </div>
                         </div>
 
+                        {/* Password Change Section (Optional) */}
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <User className="w-5 h-5 text-teal-600" />
+                                Change Password (Optional)
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Password */}
+                                <div>
+                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                                        New Password
+                                    </label>
+                                    <input
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                        placeholder="Leave blank to keep current"
+                                    />
+                                </div>
+
+                                {/* Confirm Password */}
+                                <div>
+                                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Confirm New Password
+                                    </label>
+                                    <input
+                                        id="confirmPassword"
+                                        name="confirmPassword"
+                                        type="password"
+                                        value={formData.confirmPassword}
+                                        onChange={handleChange}
+                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                        placeholder="Confirm new password"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-teal-200"
+                            disabled={submitting}
+                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors shadow-lg shadow-teal-200"
                         >
-                            <Save className="w-5 h-5" />
-                            Save Changes
+                            {submitting ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-5 h-5" />
+                                    Save Changes
+                                </>
+                            )}
                         </button>
                     </form>
                 </div>

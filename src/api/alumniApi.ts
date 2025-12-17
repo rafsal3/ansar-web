@@ -95,6 +95,23 @@ export interface AlumniProfile {
     isActive: boolean;
 }
 
+export interface AlumniUpdateData {
+    name: string;
+    email: string;
+    phone: string;
+    course: string;
+    startYear: string;
+    endYear: string;
+    className: string;
+    jobId: string;
+    instagram?: string;
+    facebook?: string;
+    whatsapp?: string;
+    password?: string;
+    confirmPassword?: string;
+    photo?: File;
+}
+
 export const alumniApi = {
     // ... existing functions
     register: async (data: AlumniRegisterData) => {
@@ -140,6 +157,35 @@ export const alumniApi = {
 
     getAlumniMe: async () => {
         const response = await apiClient.get<AlumniProfile>('/Alumini/me');
+        return response.data;
+    },
+
+    updateAlumniProfile: async (data: AlumniUpdateData) => {
+        const formData = new FormData();
+
+        // Append all fields to formData
+        formData.append('name', data.name);
+        formData.append('email', data.email);
+        formData.append('phone', data.phone);
+        formData.append('course', data.course);
+        formData.append('startYear', data.startYear);
+        formData.append('endYear', data.endYear);
+        formData.append('className', data.className);
+        formData.append('jobId', data.jobId);
+
+        // Append optional fields only if they have values
+        if (data.instagram) formData.append('instagram', data.instagram);
+        if (data.facebook) formData.append('facebook', data.facebook);
+        if (data.whatsapp) formData.append('whatsapp', data.whatsapp);
+        if (data.password) formData.append('password', data.password);
+        if (data.confirmPassword) formData.append('confirmPassword', data.confirmPassword);
+        if (data.photo) formData.append('photo', data.photo);
+
+        const response = await apiClient.put('/Alumini/update-me', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
         return response.data;
     }
 };
