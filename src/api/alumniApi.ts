@@ -53,7 +53,10 @@ export interface AlumniResponse {
     pagination: AlumniPagination;
 }
 
+
+
 export const alumniApi = {
+    // ... existing functions
     register: async (data: AlumniRegisterData) => {
         const formData = new FormData();
 
@@ -82,6 +85,8 @@ export const alumniApi = {
         const response = await apiClient.get<AlumniResponse>(`/admin/alumni/all?page=${page}&limit=${limit}`);
         return response.data;
     },
+
+
 
     updateStatus: async (id: number, isActive: boolean) => {
         const response = await apiClient.patch(`/admin/alumni/${id}/status`, { isActive });

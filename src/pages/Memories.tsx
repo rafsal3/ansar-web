@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Upload, User, ChevronDown, ChevronLeft, ChevronRight, X, Image } from 'lucide-react';
+import { useState, ChangeEvent } from 'react';
+import { Upload, User, ChevronDown, ChevronLeft, ChevronRight, X, Image, Trash2 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { memoryApi } from '../api/memoryApi';
 
 interface Memory {
     id: number;
@@ -14,14 +16,17 @@ interface Memory {
 type TabType = 'all' | 'my';
 
 const Memories = () => {
+    const { user } = useAuth();
     const [selectedBatch, setSelectedBatch] = useState<string>('Class of 2010');
     const [sortBy, setSortBy] = useState<string>('Sort by Date');
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [memoryDescription, setMemoryDescription] = useState<string>('');
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [activeTab, setActiveTab] = useState<TabType>('all');
     const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
     const [myMemories, setMyMemories] = useState<Memory[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     const batches: string[] = ['Class of 2010', 'Class of 2011', 'Class of 2012', 'Class of 2013', 'Class of 2014'];
     const sortOptions: string[] = ['Sort by Date', 'Sort by Name', 'Sort by Batch'];
@@ -86,31 +91,73 @@ const Memories = () => {
     const handleEditMemory = (memory: Memory): void => {
         setEditingMemory(memory);
         setMemoryDescription(memory.description || '');
+        setSelectedFiles([]); // Reset files for edit mode for now
         setIsModalOpen(true);
     };
 
-    const handleSaveMemory = (): void => {
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const filesArray = Array.from(e.target.files);
+            setSelectedFiles((prevFiles) => [...prevFiles, ...filesArray]);
+        }
+    };
+
+    const removeFile = (index: number) => {
+        setSelectedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+    };
+
+    const handleSaveMemory = async (): Promise<void> => {
+        if (!user) {
+            alert("Please login to share a memory.");
+            return;
+        }
+
         if (editingMemory) {
+            // Edit logic (local only for now as requested API was for create)
             setMyMemories(myMemories.map(m =>
                 m.id === editingMemory.id
                     ? { ...m, title: memoryDescription.substring(0, 50) + '...', description: memoryDescription }
                     : m
             ));
             setEditingMemory(null);
+            setIsModalOpen(false);
+            setMemoryDescription('');
+            setSelectedFiles([]);
         } else {
-            const newMemory: Memory = {
-                id: Date.now(),
-                title: memoryDescription.substring(0, 50) + '...',
-                description: memoryDescription,
-                author: 'You',
-                batch: selectedBatch,
-                date: new Date().toLocaleDateString('en-US'),
-                image: null
-            };
-            setMyMemories([newMemory, ...myMemories]);
+            // Create logic
+            try {
+                setIsSubmitting(true);
+                const response = await memoryApi.createMemory({
+                    description: memoryDescription,
+                    status: 'active',
+                    userId: user.id,
+                    photos: selectedFiles
+                });
+
+                const newMemory: Memory = {
+                    id: response.data.data.id,
+                    title: response.data.data.description.substring(0, 50) + '...',
+                    description: response.data.data.description,
+                    author: (user && 'name' in user && user.name) ? user.name : 'You',
+                    batch: (user && 'batch' in user && user.batch) ? user.batch : selectedBatch,
+                    date: new Date(response.data.data.createdAt).toLocaleDateString('en-US'),
+                    image: response.data.data.photos.length > 0 ? response.data.data.photos[0] : null
+                };
+
+                setMyMemories([newMemory, ...myMemories]);
+                setIsModalOpen(false);
+                setMemoryDescription('');
+                setSelectedFiles([]);
+
+                // Switch to 'My Memories' tab to show the new memory
+                setActiveTab('my');
+            } catch (error) {
+                console.error("Failed to create memory:", error);
+                alert("Failed to share memory. Please try again.");
+            } finally {
+                setIsSubmitting(false);
+            }
         }
-        setIsModalOpen(false);
-        setMemoryDescription('');
     };
 
     return (
@@ -127,8 +174,8 @@ const Memories = () => {
                     <button
                         onClick={() => setActiveTab('all')}
                         className={`px-6 py-3 font-medium transition-colors relative ${activeTab === 'all'
-                                ? 'text-purple-600'
-                                : 'text-gray-600 hover:text-gray-900'
+                            ? 'text-purple-600'
+                            : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         All Memories
@@ -139,8 +186,8 @@ const Memories = () => {
                     <button
                         onClick={() => setActiveTab('my')}
                         className={`px-6 py-3 font-medium transition-colors relative ${activeTab === 'my'
-                                ? 'text-purple-600'
-                                : 'text-gray-600 hover:text-gray-900'
+                            ? 'text-purple-600'
+                            : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         My Memories
@@ -306,10 +353,18 @@ const Memories = () => {
                                 {myMemories.map((memory) => (
                                     <div key={memory.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
                                         {/* Image Placeholder */}
-                                        <div className="h-64 bg-gradient-to-br from-purple-200 to-purple-300 w-full relative">
-                                            <div className="absolute inset-0 flex items-center justify-center text-purple-600">
-                                                <span className="text-sm font-medium">Your Memory</span>
-                                            </div>
+                                        <div className="h-64 bg-gray-100 w-full relative overflow-hidden">
+                                            {memory.image ? (
+                                                <img
+                                                    src={memory.image} // Note: This might need to be a full URL if returning a relative path
+                                                    alt={memory.title}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="bg-gradient-to-br from-purple-200 to-purple-300 w-full h-full flex items-center justify-center text-purple-600">
+                                                    <span className="text-sm font-medium">Your Memory</span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="p-6">
@@ -372,6 +427,7 @@ const Memories = () => {
                                         setIsModalOpen(false);
                                         setMemoryDescription('');
                                         setEditingMemory(null);
+                                        setSelectedFiles([]);
                                     }}
                                     className="text-gray-400 hover:text-gray-600 transition-colors"
                                 >
@@ -381,14 +437,57 @@ const Memories = () => {
 
                             {/* Photo Upload Area */}
                             <div className="mb-6">
-                                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center">
+                                <label className="block text-base font-semibold text-gray-900 mb-3">
+                                    Photos
+                                </label>
+                                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center">
                                     <div className="flex flex-col items-center">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-2">Add Photo</h3>
-                                        <p className="text-gray-500 mb-6">Drag & drop files here or click to browse</p>
-                                        <button className="flex items-center gap-2 px-6 py-3 bg-purple-100 text-purple-600 font-medium rounded-xl hover:bg-purple-200 transition-colors">
-                                            <Image className="w-5 h-5" />
-                                            Upload Photo
-                                        </button>
+                                        {selectedFiles.length === 0 ? (
+                                            <>
+                                                <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mb-4">
+                                                    <Image className="w-8 h-8 text-purple-600" />
+                                                </div>
+                                                <h3 className="text-lg font-bold text-gray-900 mb-2">Add Photos</h3>
+                                                <p className="text-gray-500 mb-4">Drag & drop files here or click to browse</p>
+                                            </>
+                                        ) : (
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full mb-4">
+                                                {selectedFiles.map((file, index) => (
+                                                    <div key={index} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                                        <img
+                                                            src={URL.createObjectURL(file)}
+                                                            alt={`Preview ${index}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <button
+                                                            onClick={() => removeFile(index)}
+                                                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        <div className="relative">
+                                            <input
+                                                type="file"
+                                                multiple
+                                                accept="image/*"
+                                                onChange={handleFileChange}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            />
+                                            <button className="flex items-center gap-2 px-6 py-3 bg-purple-100 text-purple-600 font-medium rounded-xl hover:bg-purple-200 transition-colors pointer-events-none">
+                                                <Upload className="w-5 h-5" />
+                                                {selectedFiles.length > 0 ? 'Add More Photos' : 'Upload Photos'}
+                                            </button>
+                                        </div>
+                                        {selectedFiles.length > 0 && (
+                                            <p className="mt-3 text-sm text-gray-500">
+                                                {selectedFiles.length} photo{selectedFiles.length !== 1 ? 's' : ''} selected
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -414,16 +513,26 @@ const Memories = () => {
                                         setIsModalOpen(false);
                                         setMemoryDescription('');
                                         setEditingMemory(null);
+                                        setSelectedFiles([]);
                                     }}
                                     className="px-8 py-3 bg-purple-100 text-purple-600 font-medium rounded-xl hover:bg-purple-200 transition-colors"
+                                    disabled={isSubmitting}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSaveMemory}
-                                    className="px-8 py-3 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200"
+                                    disabled={isSubmitting}
+                                    className="px-8 py-3 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
-                                    {editingMemory ? 'Update Memory' : 'Share your Memory'}
+                                    {isSubmitting ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        editingMemory ? 'Update Memory' : 'Share your Memory'
+                                    )}
                                 </button>
                             </div>
                         </div>
