@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminLogin, alumniLogin, User } from '../api/authApi';
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     // Load user from localStorage on mount
     useEffect(() => {
@@ -65,12 +67,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const logout = () => {
+        // Check if the current user is an alumni before clearing data
+        const isAlumni = user?.type === 'alumni';
+
         // Clear all auth data
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         localStorage.removeItem('authToken');
         setUser(null);
+
+        // Redirect alumni to the main landing page
+        if (isAlumni) {
+            navigate('/');
+        }
     };
 
     const value: AuthContextType = {

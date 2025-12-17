@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Mail, Phone, Calendar, GraduationCap, Save, ArrowLeft, Camera } from 'lucide-react';
 import { alumniApi, AlumniProfile } from '@/api/alumniApi';
+import { getAllJobs, Job } from '@/api/jobApi';
 import { API_BASE_URL } from '@/api/apiClient';
 
 const EditProfile = () => {
@@ -10,6 +11,7 @@ const EditProfile = () => {
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [profileData, setProfileData] = useState<AlumniProfile | null>(null);
+    const [jobs, setJobs] = useState<Job[]>([]);
     const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [formData, setFormData] = useState({
@@ -29,38 +31,45 @@ const EditProfile = () => {
     });
 
     useEffect(() => {
-        const fetchProfileData = async () => {
+        const fetchData = async () => {
             try {
                 setLoading(true);
                 setError(null);
-                const data = await alumniApi.getAlumniMe();
-                setProfileData(data);
+
+                // Fetch profile data and jobs in parallel
+                const [profileResponse, jobsResponse] = await Promise.all([
+                    alumniApi.getAlumniMe(),
+                    getAllJobs()
+                ]);
+
+                setProfileData(profileResponse);
+                setJobs(jobsResponse.data);
 
                 // Pre-fill form with fetched data
                 setFormData({
-                    fullName: data.name || '',
-                    email: data.email || '',
-                    phone: data.phone || '',
-                    startYear: data.startYear?.toString() || '',
-                    endYear: data.endYear?.toString() || '',
-                    course: data.course || '',
-                    className: data.className || '',
-                    jobId: data.job?.id.toString() || '',
-                    instagram: data.instagram || '',
-                    facebook: data.facebook || '',
-                    whatsapp: data.whatsapp || '',
+                    fullName: profileResponse.name || '',
+                    email: profileResponse.email || '',
+                    phone: profileResponse.phone || '',
+                    startYear: profileResponse.startYear?.toString() || '',
+                    endYear: profileResponse.endYear?.toString() || '',
+                    course: profileResponse.course || '',
+                    className: profileResponse.className || '',
+                    jobId: profileResponse.job?.id.toString() || '',
+                    instagram: profileResponse.instagram || '',
+                    facebook: profileResponse.facebook || '',
+                    whatsapp: profileResponse.whatsapp || '',
                     password: '',
                     confirmPassword: ''
                 });
             } catch (err: any) {
-                console.error('Error fetching profile:', err);
-                setError(err.response?.data?.message || 'Failed to load profile data');
+                console.error('Error fetching data:', err);
+                setError(err.response?.data?.message || 'Failed to load data');
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchProfileData();
+        fetchData();
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -393,26 +402,26 @@ const EditProfile = () => {
                                     />
                                 </div>
 
-                                {/* Job/Occupation - Note: This would ideally be a dropdown populated from jobs API */}
+                                {/* Job/Occupation */}
                                 <div className="md:col-span-2">
                                     <label htmlFor="jobId" className="block text-sm font-medium text-gray-700 mb-2">
                                         Current Occupation *
                                     </label>
-                                    <input
+                                    <select
                                         id="jobId"
                                         name="jobId"
-                                        type="text"
                                         required
                                         value={formData.jobId}
                                         onChange={handleChange}
-                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                        placeholder="Job ID"
-                                    />
-                                    {profileData?.job && (
-                                        <p className="mt-2 text-sm text-gray-600">
-                                            Current: {profileData.job.name}
-                                        </p>
-                                    )}
+                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all bg-white"
+                                    >
+                                        <option value="">Select your occupation</option>
+                                        {jobs.map((job) => (
+                                            <option key={job.id} value={job.id.toString()}>
+                                                {job.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 {/* Social Media Links */}
