@@ -1,9 +1,9 @@
 import { useState, useEffect, ChangeEvent } from 'react';
-import { Upload, User, ChevronDown, ChevronLeft, ChevronRight, X, Image, Trash2 } from 'lucide-react';
+import { Upload, User, ChevronDown, ChevronLeft, ChevronRight, X, Image, Trash2, Eye } from 'lucide-react';
 
 import { API_BASE_URL } from '../api/apiClient';
 import { useAuth } from '../contexts/AuthContext';
-import { memoryApi, PublicMemory } from '../api/memoryApi';
+import { memoryApi, PublicMemory, MyMemory } from '../api/memoryApi';
 import ImageSlider from '../components/ImageSlider';
 
 interface Memory {
@@ -14,6 +14,8 @@ interface Memory {
     batch: string;
     date: string;
     images: string[];
+    isApproved?: boolean;
+    status?: string;
 }
 
 type TabType = 'all' | 'my';
@@ -27,15 +29,16 @@ const Memories = () => {
     const [memoryDescription, setMemoryDescription] = useState<string>('');
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [activeTab, setActiveTab] = useState<TabType>('all');
-    const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
-    const [myMemories, setMyMemories] = useState<Memory[]>([]);
+    const [viewingMemory, setViewingMemory] = useState<Memory | null>(null);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     const batches: string[] = ['Class of 2010', 'Class of 2011', 'Class of 2012', 'Class of 2013', 'Class of 2014'];
     const sortOptions: string[] = ['Sort by Date', 'Sort by Name', 'Sort by Batch'];
 
     const [allMemories, setAllMemories] = useState<Memory[]>([]);
+    const [myMemoriesList, setMyMemoriesList] = useState<Memory[]>([]); // Renamed to avoid conflict if any, though previous was myMemories
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isMyMemoriesLoading, setIsMyMemoriesLoading] = useState<boolean>(false);
     const [totalPages, setTotalPages] = useState<number>(1);
 
     const fetchMemories = async () => {
@@ -62,21 +65,57 @@ const Memories = () => {
         }
     };
 
+    const fetchMyMemories = async () => {
+        if (!user) return;
+        try {
+            setIsMyMemoriesLoading(true);
+            const response = await memoryApi.getMyMemories(1, 100); // Fetch all or paginate similarly if needed
+
+            const formattedMemories: Memory[] = response.data.map((item: MyMemory) => ({
+                id: item.id,
+                title: item.description.length > 50 ? item.description.substring(0, 50) + '...' : item.description,
+                description: item.description,
+                author: 'You', // It's my memory
+                batch: (user as any).batch || '', // Use user's batch
+                date: new Date(item.createdAt).toLocaleDateString('en-US'),
+                images: item.photos.length > 0 ? item.photos.map(p => `${API_BASE_URL}/uploads/${p.url}`) : [],
+                isApproved: item.isApproved,
+                status: item.status
+            }));
+
+            setMyMemoriesList(formattedMemories);
+        } catch (error) {
+            console.error("Failed to fetch my memories:", error);
+        } finally {
+            setIsMyMemoriesLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (activeTab === 'all') {
             fetchMemories();
+        } else if (activeTab === 'my') {
+            fetchMyMemories();
         }
     }, [currentPage, activeTab]);
 
 
-    const handleDeleteMemory = (id: number): void => {
-        setMyMemories(myMemories.filter(m => m.id !== id));
+    const handleDeleteMemory = async (id: number): Promise<void> => {
+        if (window.confirm("Are you sure you want to delete this memory?")) {
+            try {
+                await memoryApi.deleteMemory(id);
+                setMyMemoriesList(myMemoriesList.filter(m => m.id !== id));
+            } catch (error) {
+                console.error("Failed to delete memory:", error);
+                alert("Failed to delete memory.");
+            }
+        }
     };
 
-    const handleEditMemory = (memory: Memory): void => {
-        setEditingMemory(memory);
+    const handleViewMemory = (memory: Memory): void => {
+        setViewingMemory(memory);
         setMemoryDescription(memory.description || '');
-        setSelectedFiles([]); // Reset files for edit mode for now
+        setSelectedFiles([]);
         setIsModalOpen(true);
     };
 
@@ -97,54 +136,42 @@ const Memories = () => {
             return;
         }
 
-        if (editingMemory) {
-            // Edit logic (local only for now as requested API was for create)
-            setMyMemories(myMemories.map(m =>
-                m.id === editingMemory.id
-                    ? { ...m, title: memoryDescription.substring(0, 50) + '...', description: memoryDescription }
-                    : m
-            ));
-            setEditingMemory(null);
+        if (viewingMemory) {
+            // View mode only, close modal
+            setViewingMemory(null);
             setIsModalOpen(false);
             setMemoryDescription('');
             setSelectedFiles([]);
-        } else {
-            // Create logic
-            try {
-                setIsSubmitting(true);
-                const response = await memoryApi.createMemory({
-                    description: memoryDescription,
-                    status: 'active',
-                    userId: user.id,
-                    photos: selectedFiles
-                });
+            return;
+        }
 
-                const newMemory: Memory = {
-                    id: response.data.data.id,
-                    title: response.data.data.description.substring(0, 50) + '...',
-                    description: response.data.data.description,
-                    author: (user && 'name' in user && user.name) ? user.name : 'You',
-                    batch: (user && 'batch' in user && user.batch) ? user.batch : selectedBatch,
-                    date: new Date(response.data.data.createdAt).toLocaleDateString('en-US'),
-                    images: response.data.data.photos.length > 0 ?
-                        response.data.data.photos.map((p: any) =>
-                            typeof p === 'string' ? `${API_BASE_URL}/uploads/${p}` : `${API_BASE_URL}/uploads/${p.url}`
-                        ) : []
-                };
+        // Create logic
+        try {
+            setIsSubmitting(true);
+            await memoryApi.createMemory({
+                description: memoryDescription,
+                status: 'active',
+                userId: user.id,
+                photos: selectedFiles
+            });
 
-                setMyMemories([newMemory, ...myMemories]);
-                setIsModalOpen(false);
-                setMemoryDescription('');
-                setSelectedFiles([]);
-
-                // Switch to 'My Memories' tab to show the new memory
+            // Refresh list after create
+            if (activeTab === 'my') {
+                fetchMyMemories();
+            } else {
+                // Switch to 'My Memories' tab to show the new memory and trigger fetch
                 setActiveTab('my');
-            } catch (error) {
-                console.error("Failed to create memory:", error);
-                alert("Failed to share memory. Please try again.");
-            } finally {
-                setIsSubmitting(false);
             }
+
+            setIsModalOpen(false);
+            setMemoryDescription('');
+            setSelectedFiles([]);
+
+        } catch (error) {
+            console.error("Failed to create memory:", error);
+            alert("Failed to share memory. Please try again.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -352,7 +379,11 @@ const Memories = () => {
                 {/* My Memories Section */}
                 {activeTab === 'my' && (
                     <div>
-                        {myMemories.length === 0 ? (
+                        {isMyMemoriesLoading ? (
+                            <div className="flex justify-center py-12">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                            </div>
+                        ) : myMemoriesList.length === 0 ? (
                             <div className="flex items-center justify-center py-16">
                                 <div className="max-w-md w-full">
                                     <div className="bg-white rounded-3xl p-12 text-center border-2 border-dashed border-gray-300 hover:border-purple-300 transition-colors">
@@ -377,8 +408,15 @@ const Memories = () => {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {myMemories.map((memory) => (
-                                    <div key={memory.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
+                                {myMemoriesList.map((memory) => (
+                                    <div key={memory.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 relative">
+                                        {/* Status Badge from API */}
+                                        <div className={`absolute top-4 right-4 z-10 px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${memory.isApproved
+                                            ? 'bg-green-100 text-green-700 border border-green-200'
+                                            : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                                            }`}>
+                                            {memory.isApproved ? 'Approved' : 'Pending'}
+                                        </div>
                                         {/* Image Slider */}
                                         <div className="h-64 w-full relative overflow-hidden">
                                             {memory.images && memory.images.length > 0 ? (
@@ -411,15 +449,17 @@ const Memories = () => {
                                             {/* Action Buttons */}
                                             <div className="flex gap-2">
                                                 <button
-                                                    onClick={() => handleEditMemory(memory)}
-                                                    className="flex-1 px-4 py-2 bg-purple-100 text-purple-600 font-medium rounded-lg hover:bg-purple-200 transition-colors text-sm"
+                                                    onClick={() => handleViewMemory(memory)}
+                                                    className="flex-1 px-4 py-2 bg-purple-100 text-purple-600 font-medium rounded-lg hover:bg-purple-200 transition-colors text-sm flex items-center justify-center gap-2"
                                                 >
-                                                    Edit
+                                                    <Eye className="w-4 h-4" />
+                                                    View
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteMemory(memory.id)}
-                                                    className="flex-1 px-4 py-2 bg-red-100 text-red-600 font-medium rounded-lg hover:bg-red-200 transition-colors text-sm"
+                                                    className="flex-1 px-4 py-2 bg-red-100 text-red-600 font-medium rounded-lg hover:bg-red-200 transition-colors text-sm flex items-center justify-center gap-2"
                                                 >
+                                                    <Trash2 className="w-4 h-4" />
                                                     Delete
                                                 </button>
                                             </div>
@@ -441,7 +481,7 @@ const Memories = () => {
                             <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-                                        {editingMemory ? 'Edit Memory' : 'Share a memory'}
+                                        {viewingMemory ? 'View Memory' : 'Share a memory'}
                                     </h2>
                                     <p className="text-gray-500">A legacy of excellence, integrity, and community service.</p>
                                 </div>
@@ -449,7 +489,7 @@ const Memories = () => {
                                     onClick={() => {
                                         setIsModalOpen(false);
                                         setMemoryDescription('');
-                                        setEditingMemory(null);
+                                        setViewingMemory(null);
                                         setSelectedFiles([]);
                                     }}
                                     className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -494,17 +534,21 @@ const Memories = () => {
                                         )}
 
                                         <div className="relative">
-                                            <input
-                                                type="file"
-                                                multiple
-                                                accept="image/*"
-                                                onChange={handleFileChange}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                            />
-                                            <button className="flex items-center gap-2 px-6 py-3 bg-purple-100 text-purple-600 font-medium rounded-xl hover:bg-purple-200 transition-colors pointer-events-none">
-                                                <Upload className="w-5 h-5" />
-                                                {selectedFiles.length > 0 ? 'Add More Photos' : 'Upload Photos'}
-                                            </button>
+                                            {!viewingMemory && (
+                                                <>
+                                                    <input
+                                                        type="file"
+                                                        multiple
+                                                        accept="image/*"
+                                                        onChange={handleFileChange}
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                    />
+                                                    <button className="flex items-center gap-2 px-6 py-3 bg-purple-100 text-purple-600 font-medium rounded-xl hover:bg-purple-200 transition-colors pointer-events-none">
+                                                        <Upload className="w-5 h-5" />
+                                                        {selectedFiles.length > 0 ? 'Add More Photos' : 'Upload Photos'}
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                         {selectedFiles.length > 0 && (
                                             <p className="mt-3 text-sm text-gray-500">
@@ -525,7 +569,8 @@ const Memories = () => {
                                     onChange={(e) => setMemoryDescription(e.target.value)}
                                     placeholder="Tell your story"
                                     rows={8}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                                    readOnly={!!viewingMemory}
+                                    className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${viewingMemory ? 'bg-gray-100' : ''}`}
                                 />
                             </div>
 
@@ -535,7 +580,7 @@ const Memories = () => {
                                     onClick={() => {
                                         setIsModalOpen(false);
                                         setMemoryDescription('');
-                                        setEditingMemory(null);
+                                        setViewingMemory(null);
                                         setSelectedFiles([]);
                                     }}
                                     className="px-8 py-3 bg-purple-100 text-purple-600 font-medium rounded-xl hover:bg-purple-200 transition-colors"
@@ -546,7 +591,10 @@ const Memories = () => {
                                 <button
                                     onClick={handleSaveMemory}
                                     disabled={isSubmitting}
-                                    className="px-8 py-3 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className={`px-8 py-3 font-medium rounded-xl transition-colors shadow-lg shadow-purple-200 flex items-center gap-2 ${viewingMemory
+                                        ? 'bg-purple-600 text-white hover:bg-purple-700'
+                                        : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-70 disabled:cursor-not-allowed'
+                                        }`}
                                 >
                                     {isSubmitting ? (
                                         <>
@@ -554,7 +602,7 @@ const Memories = () => {
                                             Saving...
                                         </>
                                     ) : (
-                                        editingMemory ? 'Update Memory' : 'Share your Memory'
+                                        viewingMemory ? 'Close' : 'Share your Memory'
                                     )}
                                 </button>
                             </div>
@@ -562,7 +610,7 @@ const Memories = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </div >
     );
 };
 
