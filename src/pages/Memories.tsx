@@ -1,7 +1,8 @@
-import { useState, ChangeEvent } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import { Upload, User, ChevronDown, ChevronLeft, ChevronRight, X, Image, Trash2 } from 'lucide-react';
+import { API_BASE_URL } from '../api/apiClient';
 import { useAuth } from '../contexts/AuthContext';
-import { memoryApi } from '../api/memoryApi';
+import { memoryApi, PublicMemory } from '../api/memoryApi';
 
 interface Memory {
     id: number;
@@ -31,58 +32,40 @@ const Memories = () => {
     const batches: string[] = ['Class of 2010', 'Class of 2011', 'Class of 2012', 'Class of 2013', 'Class of 2014'];
     const sortOptions: string[] = ['Sort by Date', 'Sort by Name', 'Sort by Batch'];
 
-    const memories: Memory[] = [
-        {
-            id: 1,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Alice Johnson',
-            batch: '2010 Batch',
-            date: '12/20/2020',
-            image: null
-        },
-        {
-            id: 2,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Haylie Calzoni',
-            batch: '2010 Batch',
-            date: '6/7/2012',
-            image: null
-        },
-        {
-            id: 3,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Lincoln Vetrovs',
-            batch: '2010 Batch',
-            date: '4/19/2015',
-            image: null
-        },
-        {
-            id: 4,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Marley Saris',
-            batch: '2010 Batch',
-            date: '1/25/2018',
-            image: null
-        },
-        {
-            id: 5,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Phillip Stanton',
-            batch: '2010 Batch',
-            date: '3/13/2012',
-            image: null
-        },
-        {
-            id: 6,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Abram Aminoff',
-            batch: '2010 Batch',
-            date: '2/20/2017',
-            image: null
-        }
-    ];
+    const [allMemories, setAllMemories] = useState<Memory[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [totalPages, setTotalPages] = useState<number>(1);
 
-    const totalPages: number = 10;
+    const fetchMemories = async () => {
+        try {
+            setIsLoading(true);
+            const response = await memoryApi.getAllMemories(currentPage, 9); // limit 9 for grid layout
+
+            const formattedMemories: Memory[] = response.data.map((item: PublicMemory) => ({
+                id: item.id,
+                title: item.description.length > 50 ? item.description.substring(0, 50) + '...' : item.description,
+                description: item.description,
+                author: item.user.name,
+                batch: '', // Batch is not returned in listing API currently
+                date: new Date(item.createdAt).toLocaleDateString('en-US'),
+                image: item.photos.length > 0 ? `${API_BASE_URL}/${item.photos[0].url}` : null
+            }));
+
+            setAllMemories(formattedMemories);
+            setTotalPages(response.meta.totalPages);
+        } catch (error) {
+            console.error("Failed to fetch memories:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'all') {
+            fetchMemories();
+        }
+    }, [currentPage, activeTab]);
+
 
     const handleDeleteMemory = (id: number): void => {
         setMyMemories(myMemories.filter(m => m.id !== id));
@@ -245,80 +228,126 @@ const Memories = () => {
                 {activeTab === 'all' && (
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                            {memories.map((memory) => (
-                                <div key={memory.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
-                                    {/* Image Placeholder */}
-                                    <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300 w-full relative">
-                                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                                            <span className="text-sm">Image Placeholder</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-6">
-                                        {/* Title */}
-                                        <h3 className="text-lg font-bold text-gray-900 mb-4">{memory.title}</h3>
-
-                                        {/* Author & Batch */}
-                                        <div className="flex items-center justify-between text-sm">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                                                    <User className="w-4 h-4 text-gray-600" />
-                                                </div>
-                                                <span className="font-medium text-gray-700">{memory.author}</span>
-                                            </div>
-                                            <span className="text-gray-500">{memory.batch}</span>
-                                        </div>
-
-                                        {/* Date */}
-                                        <div className="mt-2 text-sm text-gray-500">{memory.date}</div>
-                                    </div>
+                            {isLoading ? (
+                                <div className="col-span-full flex justify-center py-12">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
                                 </div>
-                            ))}
+                            ) : allMemories.length === 0 ? (
+                                <div className="col-span-full text-center py-12 text-gray-500">
+                                    No memories found.
+                                </div>
+                            ) : (
+                                allMemories.map((memory) => (
+                                    <div key={memory.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
+                                        {/* Image Placeholder */}
+                                        <div className="h-64 bg-gray-100 w-full relative overflow-hidden">
+                                            {memory.image ? (
+                                                <img
+                                                    src={memory.image}
+                                                    alt={memory.title}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=No+Image';
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="bg-gradient-to-br from-gray-200 to-gray-300 w-full h-full flex items-center justify-center text-gray-400">
+                                                    <span className="text-sm">No Image</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="p-6">
+                                            {/* Title */}
+                                            <h3 className="text-lg font-bold text-gray-900 mb-4">{memory.title}</h3>
+
+                                            {/* Author & Batch */}
+                                            <div className="flex items-center justify-between text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                                                        <User className="w-4 h-4 text-gray-600" />
+                                                    </div>
+                                                    <span className="font-medium text-gray-700">{memory.author}</span>
+                                                </div>
+                                                <span className="text-gray-500">{memory.batch}</span>
+                                            </div>
+
+                                            {/* Date */}
+                                            <div className="mt-2 text-sm text-gray-500">{memory.date}</div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex justify-center items-center gap-2">
-                            <button
-                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                                disabled={currentPage === 1}
-                                className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <ChevronLeft className="w-5 h-5 text-gray-600" />
-                            </button>
-
-                            {[1, 2, 3].map((page) => (
+                        {/* Only show pagination if there are pages */}
+                        {totalPages > 1 && (
+                            <div className="flex justify-center items-center gap-2">
                                 <button
-                                    key={page}
-                                    onClick={() => setCurrentPage(page)}
-                                    className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
-                                        ? 'bg-teal-600 text-white'
-                                        : 'hover:bg-gray-200 text-gray-700'
-                                        }`}
+                                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
-                                    {page}
+                                    <ChevronLeft className="w-5 h-5 text-gray-600" />
                                 </button>
-                            ))}
 
-                            <span className="px-2 text-gray-500">...</span>
+                                {(() => {
+                                    const pages = [];
+                                    const maxVisible = 3;
+                                    let start = Math.max(1, currentPage - 1);
+                                    let end = Math.min(start + maxVisible - 1, totalPages);
 
-                            <button
-                                onClick={() => setCurrentPage(totalPages)}
-                                className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === totalPages
-                                    ? 'bg-teal-600 text-white'
-                                    : 'hover:bg-gray-200 text-gray-700'
-                                    }`}
-                            >
-                                {totalPages}
-                            </button>
+                                    if (end - start + 1 < maxVisible) {
+                                        start = Math.max(1, end - maxVisible + 1);
+                                    }
 
-                            <button
-                                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                                disabled={currentPage === totalPages}
-                                className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <ChevronRight className="w-5 h-5 text-gray-600" />
-                            </button>
-                        </div>
+                                    // Ensure start is at least 1
+                                    start = Math.max(1, start);
+
+                                    for (let i = start; i <= end; i++) {
+                                        pages.push(i);
+                                    }
+                                    return pages.map(page => (
+                                        <button
+                                            key={page}
+                                            onClick={() => setCurrentPage(page)}
+                                            className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
+                                                ? 'bg-teal-600 text-white'
+                                                : 'hover:bg-gray-200 text-gray-700'
+                                                }`}
+                                        >
+                                            {page}
+                                        </button>
+                                    ));
+                                })()}
+
+
+                                {totalPages > 3 && currentPage < totalPages - 1 && (
+                                    <span className="px-2 text-gray-500">...</span>
+                                )}
+
+                                {totalPages > 3 && currentPage < totalPages && (
+                                    <button
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === totalPages
+                                            ? 'bg-teal-600 text-white'
+                                            : 'hover:bg-gray-200 text-gray-700'
+                                            }`}
+                                    >
+                                        {totalPages}
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronRight className="w-5 h-5 text-gray-600" />
+                                </button>
+                            </div>
+                        )}
                     </>
                 )}
 

@@ -21,6 +21,38 @@ export interface CreateMemoryResponse {
     data: Memory;
 }
 
+export interface PublicMemoryUser {
+    id: number;
+    name: string;
+}
+
+export interface PublicMemoryPhoto {
+    id: number;
+    url: string;
+}
+
+export interface PublicMemory {
+    id: number;
+    description: string;
+    status: string;
+    user: PublicMemoryUser;
+    photos: PublicMemoryPhoto[];
+    createdAt: string;
+}
+
+export interface PublicMemoriesResponse {
+    message: string;
+    meta: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+    };
+    data: PublicMemory[];
+}
+
 export interface AdminMemoryUser {
     id: number;
     name: string;
@@ -77,6 +109,11 @@ export const memoryApi = {
 
     getAdminMemories: async (page: number = 1, limit: number = 10) => {
         const response = await apiClient.get<AdminMemoriesResponse>(`/admin/memories?page=${page}&limit=${limit}`);
+        return response.data;
+    },
+
+    getAllMemories: async (page: number = 1, limit: number = 10) => {
+        const response = await apiClient.get<PublicMemoriesResponse>(`/alumini/all-memories?page=${page}&limit=${limit}`);
         return response.data;
     },
 
