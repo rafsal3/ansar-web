@@ -84,4 +84,9 @@ export const memoryApi = {
         const response = await apiClient.patch(`/admin/memory/${id}/status`, { isApproved });
         return response.data;
     },
+
+    deleteMemory: async (id: number) => {
+        const response = await apiClient.delete(`/memories/delete/${id}`);
+        return response.data;
+    },
 };

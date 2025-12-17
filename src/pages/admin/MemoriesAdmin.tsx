@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Image as ImageIcon, Eye, X } from 'lucide-react';
+import { Search, Image as ImageIcon, Eye, X, Trash2, AlertTriangle } from 'lucide-react';
 import { memoryApi, AdminMemory } from '../../api/memoryApi';
 import { API_BASE_URL } from '../../api/apiClient';
 
@@ -11,6 +11,17 @@ const MemoriesAdmin = () => {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
     const [selectedMemory, setSelectedMemory] = useState<AdminMemory | null>(null);
+    const [confirmationModal, setConfirmationModal] = useState<{
+        isOpen: boolean;
+        actionType: 'status' | 'delete' | null;
+        memoryId: number | null;
+        newStatus?: boolean; // Only for status change
+        userName?: string;
+    }>({
+        isOpen: false,
+        actionType: null,
+        memoryId: null
+    });
 
     useEffect(() => {
         fetchMemories();
@@ -31,21 +42,49 @@ const MemoriesAdmin = () => {
         }
     };
 
-    const handleStatusToggle = async (id: number, currentStatus: boolean) => {
-        // Optimistic update
-        setMemories(memories.map(m =>
-            m.id === id ? { ...m, isApproved: !currentStatus } : m
-        ));
+    const handleStatusToggle = (id: number, currentStatus: boolean, userName: string) => {
+        setConfirmationModal({
+            isOpen: true,
+            actionType: 'status',
+            memoryId: id,
+            newStatus: !currentStatus,
+            userName
+        });
+    };
+
+    const handleDeleteClick = (id: number, userName: string) => {
+        setConfirmationModal({
+            isOpen: true,
+            actionType: 'delete',
+            memoryId: id,
+            userName
+        });
+    };
+
+    const confirmAction = async () => {
+        const { actionType, memoryId, newStatus } = confirmationModal;
+        if (!memoryId || !actionType) return;
 
         try {
-            await memoryApi.updateMemoryStatus(id, !currentStatus);
+            if (actionType === 'status' && newStatus !== undefined) {
+                // Optimistic update
+                setMemories(memories.map(m =>
+                    m.id === memoryId ? { ...m, isApproved: newStatus } : m
+                ));
+                await memoryApi.updateMemoryStatus(memoryId, newStatus);
+            } else if (actionType === 'delete') {
+                // Optimistic update
+                setMemories(memories.filter(m => m.id !== memoryId));
+                await memoryApi.deleteMemory(memoryId);
+            }
+            setConfirmationModal(prev => ({ ...prev, isOpen: false }));
         } catch (err) {
-            console.error('Failed to update memory status:', err);
-            // Revert optimistic update
-            setMemories(memories.map(m =>
-                m.id === id ? { ...m, isApproved: currentStatus } : m
-            ));
-            alert('Failed to update status');
+            console.error(`Failed to ${actionType} memory:`, err);
+            // Revert updates if needed - simplified here for brevity, usually would re-fetch or store prev state
+            // For now just re-fetch to ensure sync
+            fetchMemories();
+            alert(`Failed to ${actionType} memory.`);
+            setConfirmationModal(prev => ({ ...prev, isOpen: false }));
         }
     };
 
@@ -136,19 +175,28 @@ const MemoriesAdmin = () => {
                                                     type="checkbox"
                                                     className="sr-only peer"
                                                     checked={item.isApproved}
-                                                    onChange={() => handleStatusToggle(item.id, item.isApproved)}
+                                                    onChange={() => handleStatusToggle(item.id, item.isApproved, item.user.name)}
                                                 />
                                                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
                                             </label>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button
-                                                onClick={() => setSelectedMemory(item)}
-                                                className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
-                                                title="View Details"
-                                            >
-                                                <Eye className="w-5 h-5" />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => setSelectedMemory(item)}
+                                                    className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                                    title="View Details"
+                                                >
+                                                    <Eye className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteClick(item.id, item.user.name)}
+                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Delete Memory"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -258,16 +306,86 @@ const MemoriesAdmin = () => {
                             </button>
                             <button
                                 onClick={() => {
-                                    handleStatusToggle(selectedMemory.id, selectedMemory.isApproved);
-                                    // Update the selected memory status locally as well to reflect change immediately in modal
-                                    setSelectedMemory({ ...selectedMemory, isApproved: !selectedMemory.isApproved });
+                                    // Close detail modal, open confirmation modal
+                                    setSelectedMemory(null);
+                                    handleStatusToggle(selectedMemory.id, selectedMemory.isApproved, selectedMemory.user.name);
                                 }}
                                 className={`px-4 py-2 font-medium rounded-lg text-white transition-colors ${selectedMemory.isApproved
-                                    ? 'bg-yellow-500 hover:bg-yellow-600'
-                                    : 'bg-teal-600 hover:bg-teal-700'
+                                        ? 'bg-yellow-500 hover:bg-yellow-600'
+                                        : 'bg-teal-600 hover:bg-teal-700'
                                     }`}
                             >
                                 {selectedMemory.isApproved ? 'Revoke Approval' : 'Approve Memory'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {confirmationModal.isOpen && (
+                <div className="fixed inset-0 z-[60] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        {/* Background overlay */}
+                        <div
+                            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                            aria-hidden="true"
+                            onClick={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+                        ></div>
+
+                        {/* Modal panel */}
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <div className="sm:flex sm:items-start">
+                                    <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10 ${confirmationModal.actionType === 'delete' ? 'bg-red-100' : 'bg-yellow-100'
+                                        }`}>
+                                        <AlertTriangle className={`h-6 w-6 ${confirmationModal.actionType === 'delete' ? 'text-red-600' : 'text-yellow-600'
+                                            }`} aria-hidden="true" />
+                                    </div>
+                                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                        <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                            {confirmationModal.actionType === 'delete'
+                                                ? 'Delete Memory'
+                                                : (confirmationModal.newStatus ? 'Approve Memory' : 'Revoke Approval')}
+                                        </h3>
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-500">
+                                                {confirmationModal.actionType === 'delete'
+                                                    ? `Are you sure you want to delete this memory by ${confirmationModal.userName}? This action cannot be undone.`
+                                                    : `Are you sure you want to ${confirmationModal.newStatus ? 'approve' : 'revoke the approval for'} this memory by ${confirmationModal.userName}?`
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <button
+                                    type="button"
+                                    className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm ${confirmationModal.actionType === 'delete'
+                                            ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
+                                            : (confirmationModal.newStatus ? 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500' : 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500')
+                                        }`}
+                                    onClick={confirmAction}
+                                >
+                                    {confirmationModal.actionType === 'delete'
+                                        ? 'Delete'
+                                        : (confirmationModal.newStatus ? 'Approve' : 'Revoke')}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                    onClick={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
+                            >
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
