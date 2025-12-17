@@ -18,6 +18,7 @@ const EventsAdmin = () => {
     // Form States
     const [formData, setFormData] = useState<Partial<CreateEventPayload>>({
         name: '',
+        description: '',
         location: '',
         status: 'upcoming',
         date: new Date().toISOString().split('T')[0]
@@ -49,6 +50,7 @@ const EventsAdmin = () => {
             setEditingEvent(eventItem);
             setFormData({
                 name: eventItem.name,
+                description: eventItem.description || '',
                 location: eventItem.location,
                 status: eventItem.status,
                 date: eventItem.date
@@ -64,6 +66,7 @@ const EventsAdmin = () => {
             setEditingEvent(null);
             setFormData({
                 name: '',
+                description: '',
                 location: '',
                 status: 'upcoming',
                 date: new Date().toISOString().split('T')[0]
@@ -96,6 +99,7 @@ const EventsAdmin = () => {
             setSubmitting(true);
             const payload: CreateEventPayload = {
                 name: formData.name!,
+                description: formData.description || undefined,
                 location: formData.location!,
                 status: formData.status as 'upcoming' | 'completed',
                 date: formData.date!,
@@ -286,6 +290,17 @@ const EventsAdmin = () => {
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
                                     placeholder="Enter event name"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                <textarea
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 min-h-[120px] resize-y"
+                                    placeholder="Enter event description (optional)"
+                                    rows={4}
                                 />
                             </div>
 

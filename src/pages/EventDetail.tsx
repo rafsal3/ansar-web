@@ -92,8 +92,8 @@ const EventDetail = () => {
                             </div>
                             <div className="flex items-center">
                                 <span className={`px-3 py-1 text-xs font-medium rounded-full ${event.status === 'upcoming'
-                                        ? 'bg-blue-100 text-blue-600'
-                                        : 'bg-gray-100 text-gray-600'
+                                    ? 'bg-blue-100 text-blue-600'
+                                    : 'bg-gray-100 text-gray-600'
                                     }`}>
                                     {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
                                 </span>
@@ -118,28 +118,40 @@ const EventDetail = () => {
                         <div className="border-t border-gray-200 my-8"></div>
 
                         <div className="prose prose-lg max-w-none text-gray-700">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Event Details</h2>
-                            <div className="space-y-4">
-                                <div>
-                                    <p className="font-semibold text-gray-900">Date:</p>
-                                    <p className="text-gray-600">{event.date}</p>
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-gray-900">Status:</p>
-                                    <p className="text-gray-600 capitalize">{event.status}</p>
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-gray-900">Location:</p>
-                                    <p className="text-gray-600">{event.location}</p>
-                                </div>
-                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Event</h2>
 
-                            <div className="mt-8">
-                                <p className="text-gray-700">
-                                    {event.status === 'upcoming'
-                                        ? 'Join us for this exciting event! Mark your calendars and don\'t miss out on this wonderful opportunity.'
-                                        : 'This event has been successfully completed. Thank you to all participants and attendees.'}
-                                </p>
+                            {event.description ? (
+                                <div className="mb-8">
+                                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                        {event.description}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="mb-8">
+                                    <p className="text-gray-700">
+                                        {event.status === 'upcoming'
+                                            ? 'Join us for this exciting event! Mark your calendars and don\'t miss out on this wonderful opportunity.'
+                                            : 'This event has been successfully completed. Thank you to all participants and attendees.'}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-xl font-bold text-gray-900 mb-4">Event Details</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className="font-semibold text-gray-900">Date:</p>
+                                        <p className="text-gray-600">{event.date}</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-gray-900">Status:</p>
+                                        <p className="text-gray-600 capitalize">{event.status}</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-gray-900">Location:</p>
+                                        <p className="text-gray-600">{event.location}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
