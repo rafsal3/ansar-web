@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Mail, Phone, Linkedin, MapPin, GraduationCap } from 'lucide-react';
+import { Search, Mail, Phone, MapPin, GraduationCap } from 'lucide-react';
 import { alumniApi, Alumni } from '../api/alumniApi';
 import { API_BASE_URL } from '../api/apiClient';
 

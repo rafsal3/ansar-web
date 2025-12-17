@@ -235,7 +235,7 @@ const AlumniAdmin = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <button
-                                                onClick={() => handleStatusChange(item.id, item.isActive, item.name)}
+                                                onClick={() => handleStatusChange(item.id, item.isActive ?? false, item.name)}
                                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${item.isActive ? 'bg-teal-600' : 'bg-gray-200'
                                                     }`}
                                             >

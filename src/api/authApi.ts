@@ -15,6 +15,7 @@ export interface AlumniUser {
     type: 'alumni';
     profileImage?: string;
     name?: string;
+    email?: string;
     batch?: string;
 }
 
