@@ -37,6 +37,28 @@ export interface Alumni {
     isActive: boolean;
 }
 
+export interface AlumniDetails {
+    id: number;
+    course: string;
+    startYear: number;
+    endYear: number;
+    className: string;
+    instagram: string | null;
+    facebook: string | null;
+    whatsapp: string | null;
+    photos: string[];
+    user: {
+        id: number;
+        name: string;
+        email: string;
+        phone: string;
+    };
+    job: {
+        id: number;
+        title: string;
+    } | null;
+}
+
 export interface AlumniPagination {
     total: number;
     page: number;
@@ -90,6 +112,11 @@ export const alumniApi = {
 
     updateStatus: async (id: number, isActive: boolean) => {
         const response = await apiClient.patch(`/admin/alumni/${id}/status`, { isActive });
+        return response.data;
+    },
+
+    getAlumniById: async (id: number) => {
+        const response = await apiClient.get<AlumniDetails>(`/alumini/${id}`);
         return response.data;
     }
 };

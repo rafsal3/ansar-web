@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, Phone, Mail, Instagram, Facebook, MessageCircle, Briefcase, AlertTriangle, X } from 'lucide-react';
+import { Search, Phone, Mail, Instagram, Facebook, MessageCircle, Briefcase, AlertTriangle, X, Eye } from 'lucide-react';
 import { API_BASE_URL } from '../../api/apiClient';
 import { alumniApi, Alumni, AlumniPagination } from '../../api/alumniApi';
+import ViewAlumniModal from '../../components/admin/ViewAlumniModal';
 
 const AlumniAdmin = () => {
     const [alumni, setAlumni] = useState<Alumni[]>([]);
@@ -20,6 +21,13 @@ const AlumniAdmin = () => {
         alumniId: null,
         newStatus: false,
         alumniName: '',
+    });
+    const [viewModal, setViewModal] = useState<{
+        isOpen: boolean;
+        alumniId: number | null;
+    }>({
+        isOpen: false,
+        alumniId: null,
     });
 
     const fetchAlumni = async (page: number) => {
@@ -129,7 +137,7 @@ const AlumniAdmin = () => {
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-900">Job</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-900">Contact</th>
                                 <th className="px-6 py-4 text-sm font-semibold text-gray-900">Socials</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-900">Approve</th>
+                                <th className="px-6 py-4 text-sm font-semibold text-gray-900">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -236,6 +244,13 @@ const AlumniAdmin = () => {
                                                         }`}
                                                 />
                                             </button>
+                                            <button
+                                                onClick={() => setViewModal({ isOpen: true, alumniId: item.id })}
+                                                className="p-2 text-teal-600 hover:bg-teal-50 rounded-full transition-colors ml-2"
+                                                title="View Details"
+                                            >
+                                                <Eye className="w-5 h-5" />
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
@@ -332,6 +347,12 @@ const AlumniAdmin = () => {
                     </div>
                 </div>
             )}
+
+            <ViewAlumniModal
+                isOpen={viewModal.isOpen}
+                onClose={() => setViewModal({ isOpen: false, alumniId: null })}
+                alumniId={viewModal.alumniId}
+            />
         </div >
     );
 };
