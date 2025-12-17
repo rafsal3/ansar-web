@@ -1,116 +1,149 @@
-import { useState } from 'react';
-import { Upload, User, ChevronDown, ChevronLeft, ChevronRight, X, Image } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../api/apiClient';
+import { useAuth } from '../contexts/AuthContext';
+import { memoryApi, PublicMemory, MyMemory } from '../api/memoryApi';
 
-interface Memory {
-    id: number;
-    title: string;
-    description?: string;
-    author: string;
-    batch: string;
-    date: string;
-    image: string | null;
-}
+// Components
+import MemoriesTabs from '../components/memories/MemoriesTabs';
+import MemoriesFilter from '../components/memories/MemoriesFilter';
+import MemoryCard from '../components/memories/MemoryCard';
+import EmptyMemoriesState from '../components/memories/EmptyMemoriesState';
+import ShareMemoryModal from '../components/memories/ShareMemoryModal';
+import ViewMemoryModal from '../components/memories/ViewMemoryModal';
+import Pagination from '../components/memories/Pagination';
 
-type TabType = 'all' | 'my';
+// Types
+import { Memory, TabType } from '../components/memories/MemoriesTypes';
 
 const Memories = () => {
+    const { user } = useAuth();
+
+    // Filters & Navigation
     const [selectedBatch, setSelectedBatch] = useState<string>('Class of 2010');
     const [sortBy, setSortBy] = useState<string>('Sort by Date');
     const [currentPage, setCurrentPage] = useState<number>(1);
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-    const [memoryDescription, setMemoryDescription] = useState<string>('');
     const [activeTab, setActiveTab] = useState<TabType>('all');
-    const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
-    const [myMemories, setMyMemories] = useState<Memory[]>([]);
+
+    // Modal State
+    const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+    const [viewingMemory, setViewingMemory] = useState<Memory | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+    // Data State
+    const [allMemories, setAllMemories] = useState<Memory[]>([]);
+    const [myMemoriesList, setMyMemoriesList] = useState<Memory[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isMyMemoriesLoading, setIsMyMemoriesLoading] = useState<boolean>(false);
+    const [totalPages, setTotalPages] = useState<number>(1);
 
     const batches: string[] = ['Class of 2010', 'Class of 2011', 'Class of 2012', 'Class of 2013', 'Class of 2014'];
     const sortOptions: string[] = ['Sort by Date', 'Sort by Name', 'Sort by Batch'];
 
-    const memories: Memory[] = [
-        {
-            id: 1,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Alice Johnson',
-            batch: '2010 Batch',
-            date: '12/20/2020',
-            image: null
-        },
-        {
-            id: 2,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Haylie Calzoni',
-            batch: '2010 Batch',
-            date: '6/7/2012',
-            image: null
-        },
-        {
-            id: 3,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Lincoln Vetrovs',
-            batch: '2010 Batch',
-            date: '4/19/2015',
-            image: null
-        },
-        {
-            id: 4,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Marley Saris',
-            batch: '2010 Batch',
-            date: '1/25/2018',
-            image: null
-        },
-        {
-            id: 5,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Phillip Stanton',
-            batch: '2010 Batch',
-            date: '3/13/2012',
-            image: null
-        },
-        {
-            id: 6,
-            title: 'Graduation day! Best moments with the squad.',
-            author: 'Abram Aminoff',
-            batch: '2010 Batch',
-            date: '2/20/2017',
-            image: null
+    const fetchMemories = async () => {
+        try {
+            setIsLoading(true);
+            const response = await memoryApi.getAllMemories(currentPage, 9); // limit 9 for grid layout
+
+            const formattedMemories: Memory[] = response.data.map((item: PublicMemory) => ({
+                id: item.id,
+                title: item.description.length > 50 ? item.description.substring(0, 50) + '...' : item.description,
+                description: item.description,
+                author: item.user.name,
+                batch: '', // Batch is not returned in listing API currently
+                date: new Date(item.createdAt).toLocaleDateString('en-US'),
+                images: item.photos.length > 0 ? item.photos.map(p => `${API_BASE_URL}/uploads/${p.url}`) : []
+            }));
+
+            setAllMemories(formattedMemories);
+            setTotalPages(response.meta.totalPages);
+        } catch (error) {
+            console.error("Failed to fetch memories:", error);
+        } finally {
+            setIsLoading(false);
         }
-    ];
-
-    const totalPages: number = 10;
-
-    const handleDeleteMemory = (id: number): void => {
-        setMyMemories(myMemories.filter(m => m.id !== id));
     };
 
-    const handleEditMemory = (memory: Memory): void => {
-        setEditingMemory(memory);
-        setMemoryDescription(memory.description || '');
-        setIsModalOpen(true);
+    const fetchMyMemories = async () => {
+        if (!user) return;
+        try {
+            setIsMyMemoriesLoading(true);
+            const response = await memoryApi.getMyMemories(1, 100); // Fetch all or paginate similarly if needed
+
+            const formattedMemories: Memory[] = response.data.map((item: MyMemory) => ({
+                id: item.id,
+                title: item.description.length > 50 ? item.description.substring(0, 50) + '...' : item.description,
+                description: item.description,
+                author: 'You', // It's my memory
+                batch: (user as any).batch || '', // Use user's batch
+                date: new Date(item.createdAt).toLocaleDateString('en-US'),
+                images: item.photos.length > 0 ? item.photos.map(p => `${API_BASE_URL}/uploads/${p.url}`) : [],
+                isApproved: item.isApproved,
+                status: item.status
+            }));
+
+            setMyMemoriesList(formattedMemories);
+        } catch (error) {
+            console.error("Failed to fetch my memories:", error);
+        } finally {
+            setIsMyMemoriesLoading(false);
+        }
     };
 
-    const handleSaveMemory = (): void => {
-        if (editingMemory) {
-            setMyMemories(myMemories.map(m =>
-                m.id === editingMemory.id
-                    ? { ...m, title: memoryDescription.substring(0, 50) + '...', description: memoryDescription }
-                    : m
-            ));
-            setEditingMemory(null);
-        } else {
-            const newMemory: Memory = {
-                id: Date.now(),
-                title: memoryDescription.substring(0, 50) + '...',
-                description: memoryDescription,
-                author: 'You',
-                batch: selectedBatch,
-                date: new Date().toLocaleDateString('en-US'),
-                image: null
-            };
-            setMyMemories([newMemory, ...myMemories]);
+    useEffect(() => {
+        if (activeTab === 'all') {
+            fetchMemories();
+        } else if (activeTab === 'my') {
+            fetchMyMemories();
         }
-        setIsModalOpen(false);
-        setMemoryDescription('');
+    }, [currentPage, activeTab]);
+
+
+    const handleDeleteMemory = async (id: number): Promise<void> => {
+        if (window.confirm("Are you sure you want to delete this memory? This action cannot be undone.")) {
+            try {
+                const response = await memoryApi.deleteMyMemory(id);
+                // Remove from local state
+                setMyMemoriesList(myMemoriesList.filter(m => m.id !== id));
+                // Show success message
+                alert(response.message || "Memory deleted successfully");
+            } catch (error) {
+                console.error("Failed to delete memory:", error);
+                alert("Failed to delete memory. Please try again.");
+            }
+        }
+    };
+
+    const handleCreateMemory = async (description: string, files: File[]) => {
+        if (!user) {
+            alert("Please login to share a memory.");
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            await memoryApi.createMemory({
+                description: description,
+                status: 'active',
+                userId: user.id,
+                photos: files
+            });
+
+            // Refresh list after create
+            if (activeTab === 'my') {
+                fetchMyMemories();
+            } else {
+                // Switch to 'My Memories' tab to show the new memory and trigger fetch
+                setActiveTab('my');
+            }
+
+            setIsShareModalOpen(false);
+
+        } catch (error) {
+            console.error("Failed to create memory:", error);
+            alert("Failed to share memory. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -123,230 +156,74 @@ const Memories = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-2 mb-8 border-b border-gray-200">
-                    <button
-                        onClick={() => setActiveTab('all')}
-                        className={`px-6 py-3 font-medium transition-colors relative ${activeTab === 'all'
-                                ? 'text-purple-600'
-                                : 'text-gray-600 hover:text-gray-900'
-                            }`}
-                    >
-                        All Memories
-                        {activeTab === 'all' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600"></div>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('my')}
-                        className={`px-6 py-3 font-medium transition-colors relative ${activeTab === 'my'
-                                ? 'text-purple-600'
-                                : 'text-gray-600 hover:text-gray-900'
-                            }`}
-                    >
-                        My Memories
-                        {activeTab === 'my' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600"></div>
-                        )}
-                    </button>
-                </div>
+                <MemoriesTabs
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                />
 
-                {/* Controls */}
+                {/* Controls (All Memories only) */}
                 {activeTab === 'all' && (
-                    <div className="flex justify-between items-center mb-8">
-                        <div className="flex gap-4">
-                            {/* Batch Dropdown */}
-                            <div className="relative">
-                                <select
-                                    value={selectedBatch}
-                                    onChange={(e) => setSelectedBatch(e.target.value)}
-                                    className="appearance-none bg-white border border-gray-300 rounded-xl px-4 py-3 pr-10 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer"
-                                >
-                                    {batches.map((batch) => (
-                                        <option key={batch} value={batch}>{batch}</option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                            </div>
-
-                            {/* Sort Dropdown */}
-                            <div className="relative">
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value)}
-                                    className="appearance-none bg-white border border-gray-300 rounded-xl px-4 py-3 pr-10 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer"
-                                >
-                                    {sortOptions.map((option) => (
-                                        <option key={option} value={option}>{option}</option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                            </div>
-                        </div>
-
-                        {/* Share Button */}
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-purple-200"
-                        >
-                            <Upload className="w-5 h-5" />
-                            Share your Memories
-                        </button>
-                    </div>
+                    <MemoriesFilter
+                        batches={batches}
+                        selectedBatch={selectedBatch}
+                        onBatchChange={setSelectedBatch}
+                        sortOptions={sortOptions}
+                        sortBy={sortBy}
+                        onSortChange={setSortBy}
+                        onShare={() => setIsShareModalOpen(true)}
+                    />
                 )}
 
-                {/* Memories Grid */}
+                {/* Memories Grid - All Memories */}
                 {activeTab === 'all' && (
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                            {memories.map((memory) => (
-                                <div key={memory.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
-                                    {/* Image Placeholder */}
-                                    <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300 w-full relative">
-                                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                                            <span className="text-sm">Image Placeholder</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-6">
-                                        {/* Title */}
-                                        <h3 className="text-lg font-bold text-gray-900 mb-4">{memory.title}</h3>
-
-                                        {/* Author & Batch */}
-                                        <div className="flex items-center justify-between text-sm">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                                                    <User className="w-4 h-4 text-gray-600" />
-                                                </div>
-                                                <span className="font-medium text-gray-700">{memory.author}</span>
-                                            </div>
-                                            <span className="text-gray-500">{memory.batch}</span>
-                                        </div>
-
-                                        {/* Date */}
-                                        <div className="mt-2 text-sm text-gray-500">{memory.date}</div>
-                                    </div>
+                            {isLoading ? (
+                                <div className="col-span-full flex justify-center py-12">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
                                 </div>
-                            ))}
+                            ) : allMemories.length === 0 ? (
+                                <div className="col-span-full text-center py-12 text-gray-500">
+                                    No memories found.
+                                </div>
+                            ) : (
+                                allMemories.map((memory) => (
+                                    <MemoryCard
+                                        key={memory.id}
+                                        memory={memory}
+                                        isOwner={false}
+                                    />
+                                ))
+                            )}
                         </div>
 
-                        {/* Pagination */}
-                        <div className="flex justify-center items-center gap-2">
-                            <button
-                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                                disabled={currentPage === 1}
-                                className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <ChevronLeft className="w-5 h-5 text-gray-600" />
-                            </button>
-
-                            {[1, 2, 3].map((page) => (
-                                <button
-                                    key={page}
-                                    onClick={() => setCurrentPage(page)}
-                                    className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
-                                        ? 'bg-teal-600 text-white'
-                                        : 'hover:bg-gray-200 text-gray-700'
-                                        }`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-
-                            <span className="px-2 text-gray-500">...</span>
-
-                            <button
-                                onClick={() => setCurrentPage(totalPages)}
-                                className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === totalPages
-                                    ? 'bg-teal-600 text-white'
-                                    : 'hover:bg-gray-200 text-gray-700'
-                                    }`}
-                            >
-                                {totalPages}
-                            </button>
-
-                            <button
-                                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                                disabled={currentPage === totalPages}
-                                className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <ChevronRight className="w-5 h-5 text-gray-600" />
-                            </button>
-                        </div>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
                     </>
                 )}
 
                 {/* My Memories Section */}
                 {activeTab === 'my' && (
                     <div>
-                        {myMemories.length === 0 ? (
-                            <div className="flex items-center justify-center py-16">
-                                <div className="max-w-md w-full">
-                                    <div className="bg-white rounded-3xl p-12 text-center border-2 border-dashed border-gray-300 hover:border-purple-300 transition-colors">
-                                        <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                            <Image className="w-10 h-10 text-purple-600" />
-                                        </div>
-                                        <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                                            No Memories Yet
-                                        </h3>
-                                        <p className="text-gray-600 mb-8">
-                                            Share your first memory with your batch mates and start building your legacy.
-                                        </p>
-                                        <button
-                                            onClick={() => setIsModalOpen(true)}
-                                            className="inline-flex items-center gap-2 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-purple-200"
-                                        >
-                                            <Upload className="w-5 h-5" />
-                                            Share Your First Memory
-                                        </button>
-                                    </div>
-                                </div>
+                        {isMyMemoriesLoading ? (
+                            <div className="flex justify-center py-12">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
                             </div>
+                        ) : myMemoriesList.length === 0 ? (
+                            <EmptyMemoriesState onShare={() => setIsShareModalOpen(true)} />
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {myMemories.map((memory) => (
-                                    <div key={memory.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
-                                        {/* Image Placeholder */}
-                                        <div className="h-64 bg-gradient-to-br from-purple-200 to-purple-300 w-full relative">
-                                            <div className="absolute inset-0 flex items-center justify-center text-purple-600">
-                                                <span className="text-sm font-medium">Your Memory</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-6">
-                                            {/* Title */}
-                                            <h3 className="text-lg font-bold text-gray-900 mb-4 line-clamp-2">{memory.title}</h3>
-
-                                            {/* Author & Batch */}
-                                            <div className="flex items-center justify-between text-sm mb-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-                                                        <User className="w-4 h-4 text-white" />
-                                                    </div>
-                                                    <span className="font-medium text-gray-700">{memory.author}</span>
-                                                </div>
-                                                <span className="text-gray-500">{memory.batch}</span>
-                                            </div>
-
-                                            {/* Date */}
-                                            <div className="text-sm text-gray-500 mb-4">{memory.date}</div>
-
-                                            {/* Action Buttons */}
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => handleEditMemory(memory)}
-                                                    className="flex-1 px-4 py-2 bg-purple-100 text-purple-600 font-medium rounded-lg hover:bg-purple-200 transition-colors text-sm"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteMemory(memory.id)}
-                                                    className="flex-1 px-4 py-2 bg-red-100 text-red-600 font-medium rounded-lg hover:bg-red-200 transition-colors text-sm"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                {myMemoriesList.map((memory) => (
+                                    <MemoryCard
+                                        key={memory.id}
+                                        memory={memory}
+                                        isOwner={true}
+                                        onView={(m) => setViewingMemory(m)}
+                                        onDelete={handleDeleteMemory}
+                                    />
                                 ))}
                             </div>
                         )}
@@ -354,83 +231,20 @@ const Memories = () => {
                 )}
             </div>
 
-            {/* Share Memory Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="p-8">
-                            {/* Modal Header */}
-                            <div className="flex justify-between items-start mb-6">
-                                <div>
-                                    <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-                                        {editingMemory ? 'Edit Memory' : 'Share a memory'}
-                                    </h2>
-                                    <p className="text-gray-500">A legacy of excellence, integrity, and community service.</p>
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        setIsModalOpen(false);
-                                        setMemoryDescription('');
-                                        setEditingMemory(null);
-                                    }}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                                >
-                                    <X className="w-6 h-6" />
-                                </button>
-                            </div>
+            {/* Modals */}
+            <ShareMemoryModal
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                onSave={handleCreateMemory}
+                isSubmitting={isSubmitting}
+            />
 
-                            {/* Photo Upload Area */}
-                            <div className="mb-6">
-                                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center">
-                                    <div className="flex flex-col items-center">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-2">Add Photo</h3>
-                                        <p className="text-gray-500 mb-6">Drag & drop files here or click to browse</p>
-                                        <button className="flex items-center gap-2 px-6 py-3 bg-purple-100 text-purple-600 font-medium rounded-xl hover:bg-purple-200 transition-colors">
-                                            <Image className="w-5 h-5" />
-                                            Upload Photo
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Description */}
-                            <div className="mb-6">
-                                <label className="block text-base font-semibold text-gray-900 mb-3">
-                                    What is this memory about?
-                                </label>
-                                <textarea
-                                    value={memoryDescription}
-                                    onChange={(e) => setMemoryDescription(e.target.value)}
-                                    placeholder="Tell your story"
-                                    rows={8}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                                />
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex gap-4 justify-end">
-                                <button
-                                    onClick={() => {
-                                        setIsModalOpen(false);
-                                        setMemoryDescription('');
-                                        setEditingMemory(null);
-                                    }}
-                                    className="px-8 py-3 bg-purple-100 text-purple-600 font-medium rounded-xl hover:bg-purple-200 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleSaveMemory}
-                                    className="px-8 py-3 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200"
-                                >
-                                    {editingMemory ? 'Update Memory' : 'Share your Memory'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+            <ViewMemoryModal
+                isOpen={!!viewingMemory}
+                onClose={() => setViewingMemory(null)}
+                memory={viewingMemory}
+            />
+        </div >
     );
 };
 

@@ -30,9 +30,12 @@ import OccupationsAdmin from "@/pages/admin/OccupationsAdmin";
 import { Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 
+import { Toaster } from "react-hot-toast";
+
 function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <Routes>
         {/* Auth Routes - No Layout */}
         <Route path="/login" element={<Login />} />

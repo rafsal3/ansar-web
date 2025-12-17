@@ -1,85 +1,37 @@
-import { useState } from 'react';
-import { Search, Mail, Phone, Linkedin, MapPin, GraduationCap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Mail, Phone, MapPin, GraduationCap } from 'lucide-react';
+import { alumniApi, Alumni } from '../api/alumniApi';
+import { API_BASE_URL } from '../api/apiClient';
 
 const BatchMates = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedYear, setSelectedYear] = useState('All Years');
     const [selectedDepartment, setSelectedDepartment] = useState('All Departments');
+    const [alumniList, setAlumniList] = useState<Alumni[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const batchMates = [
-        {
-            id: 1,
-            name: 'John Doe',
-            graduationYear: '2020',
-            department: 'Computer Science',
-            degree: 'B.Sc',
-            currentPosition: 'Software Engineer at Google',
-            location: 'Bangalore, India',
-            email: 'john.doe@example.com',
-            phone: '+91 9876543210',
-            image: null
-        },
-        {
-            id: 2,
-            name: 'Jane Smith',
-            graduationYear: '2020',
-            department: 'Computer Science',
-            degree: 'B.Sc',
-            currentPosition: 'Product Manager at Microsoft',
-            location: 'Hyderabad, India',
-            email: 'jane.smith@example.com',
-            phone: '+91 9876543211',
-            image: null
-        },
-        {
-            id: 3,
-            name: 'Mike Johnson',
-            graduationYear: '2020',
-            department: 'Commerce',
-            degree: 'B.Com',
-            currentPosition: 'Financial Analyst at KPMG',
-            location: 'Mumbai, India',
-            email: 'mike.johnson@example.com',
-            phone: '+91 9876543212',
-            image: null
-        },
-        {
-            id: 4,
-            name: 'Sarah Williams',
-            graduationYear: '2019',
-            department: 'Computer Science',
-            degree: 'B.Sc',
-            currentPosition: 'Data Scientist at Amazon',
-            location: 'Chennai, India',
-            email: 'sarah.williams@example.com',
-            phone: '+91 9876543213',
-            image: null
-        },
-        {
-            id: 5,
-            name: 'David Brown',
-            graduationYear: '2021',
-            department: 'English',
-            degree: 'B.A',
-            currentPosition: 'Content Writer at HubSpot',
-            location: 'Kochi, India',
-            email: 'david.brown@example.com',
-            phone: '+91 9876543214',
-            image: null
-        },
-        {
-            id: 6,
-            name: 'Emily Davis',
-            graduationYear: '2020',
-            department: 'Computer Science',
-            degree: 'B.Sc',
-            currentPosition: 'UX Designer at Adobe',
-            location: 'Pune, India',
-            email: 'emily.davis@example.com',
-            phone: '+91 9876543215',
-            image: null
-        }
-    ];
+    useEffect(() => {
+        const fetchAlumni = async () => {
+            try {
+                const response = await alumniApi.getAllAlumni(1, 100); // Fetching up to 100 for now
+                setAlumniList(response.data);
+            } catch (error) {
+                console.error('Failed to fetch alumni:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAlumni();
+    }, []);
+
+    const filteredBatchMates = alumniList.filter(mate => {
+        const matchesSearch = mate.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesYear = selectedYear === 'All Years' || mate.endYear.toString() === selectedYear;
+        const matchesDepartment = selectedDepartment === 'All Departments' ||
+            mate.course.toLowerCase().includes(selectedDepartment.toLowerCase());
+        return matchesSearch && matchesYear && matchesDepartment;
+    });
 
     return (
         <div className="bg-gray-50 min-h-screen py-12">
@@ -136,63 +88,86 @@ const BatchMates = () => {
                                 <option>Commerce</option>
                                 <option>English</option>
                                 <option>Mathematics</option>
+                                <option>Msc</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
                 {/* Batch Mates Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {batchMates.map((mate) => (
-                        <div key={mate.id} className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
-                            {/* Profile Picture Placeholder */}
-                            <div className="flex items-start gap-4 mb-4">
-                                <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <span className="text-xl font-bold text-white">
-                                        {mate.name.split(' ').map(n => n[0]).join('')}
-                                    </span>
+                {loading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredBatchMates.map((mate) => (
+                            <div key={mate.id} className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
+                                {/* Profile Picture Placeholder */}
+                                <div className="flex items-start gap-4 mb-4">
+                                    {mate.photos && mate.photos.length > 0 ? (
+                                        <img
+                                            src={`${API_BASE_URL}${mate.photos[0]}`}
+                                            alt={mate.name}
+                                            className="w-16 h-16 rounded-full object-cover border-2 border-teal-500"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).onerror = null;
+                                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150'; // Fallback
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <span className="text-xl font-bold text-white">
+                                                {mate.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className="flex-1">
+                                        <h3 className="text-xl font-bold text-gray-900">{mate.name}</h3>
+                                        <p className="text-sm text-gray-600">{mate.job?.name || 'Alumni'}</p>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-gray-900">{mate.name}</h3>
-                                    <p className="text-sm text-gray-600">{mate.currentPosition}</p>
-                                </div>
-                            </div>
 
-                            {/* Details */}
-                            <div className="space-y-3 mb-4">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <GraduationCap className="w-4 h-4 text-teal-600" />
-                                    <span>{mate.degree} {mate.department} - {mate.graduationYear}</span>
+                                {/* Details */}
+                                <div className="space-y-3 mb-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                        <GraduationCap className="w-4 h-4 text-teal-600" />
+                                        <span>{mate.course} - {mate.endYear}</span>
+                                    </div>
+                                    {mate.className && (
+                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                            <MapPin className="w-4 h-4 text-teal-600" />
+                                            <span>{mate.className}</span>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <MapPin className="w-4 h-4 text-teal-600" />
-                                    <span>{mate.location}</span>
-                                </div>
-                            </div>
 
-                            {/* Contact Actions */}
-                            <div className="flex gap-2 pt-4 border-t border-gray-100">
-                                <a
-                                    href={`mailto:${mate.email}`}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-teal-50 text-teal-600 rounded-xl hover:bg-teal-100 transition-colors"
-                                >
-                                    <Mail className="w-4 h-4" />
-                                    <span className="text-sm font-medium">Email</span>
-                                </a>
-                                <a
-                                    href={`tel:${mate.phone}`}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
-                                >
-                                    <Phone className="w-4 h-4" />
-                                    <span className="text-sm font-medium">Call</span>
-                                </a>
-                                <button className="px-4 py-2 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition-colors">
-                                    <Linkedin className="w-4 h-4" />
-                                </button>
+                                {/* Contact Actions */}
+                                <div className="flex gap-2 pt-4 border-t border-gray-100">
+                                    <a
+                                        href={`mailto:${mate.email}`}
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-teal-50 text-teal-600 rounded-xl hover:bg-teal-100 transition-colors"
+                                    >
+                                        <Mail className="w-4 h-4" />
+                                        <span className="text-sm font-medium">Email</span>
+                                    </a>
+                                    <a
+                                        href={`tel:${mate.phone}`}
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
+                                    >
+                                        <Phone className="w-4 h-4" />
+                                        <span className="text-sm font-medium">Call</span>
+                                    </a>
+                                    {mate.instagram && (
+                                        <a href={mate.instagram} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-pink-50 text-pink-600 rounded-xl hover:bg-pink-100 transition-colors">
+                                            <span className="w-4 h-4 font-bold">IG</span>
+                                        </a>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
