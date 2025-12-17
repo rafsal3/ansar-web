@@ -75,7 +75,25 @@ export interface AlumniResponse {
     pagination: AlumniPagination;
 }
 
-
+export interface AlumniProfile {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    course: string;
+    startYear: number;
+    endYear: number;
+    className: string;
+    instagram: string | null;
+    facebook: string | null;
+    whatsapp: string | null;
+    job: {
+        id: number;
+        name: string;
+    } | null;
+    photos: string[];
+    isActive: boolean;
+}
 
 export const alumniApi = {
     // ... existing functions
@@ -117,6 +135,11 @@ export const alumniApi = {
 
     getAlumniById: async (id: number) => {
         const response = await apiClient.get<AlumniDetails>(`/alumini/${id}`);
+        return response.data;
+    },
+
+    getAlumniMe: async () => {
+        const response = await apiClient.get<AlumniProfile>('/Alumini/me');
         return response.data;
     }
 };
