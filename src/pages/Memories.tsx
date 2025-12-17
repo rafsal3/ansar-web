@@ -472,8 +472,8 @@ const Memories = () => {
                 )}
             </div>
 
-            {/* Share Memory Modal */}
-            {isModalOpen && (
+            {/* Share Memory Modal (Create) */}
+            {isModalOpen && !viewingMemory && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                         <div className="p-8">
@@ -481,7 +481,7 @@ const Memories = () => {
                             <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-                                        {viewingMemory ? 'View Memory' : 'Share a memory'}
+                                        Share a memory
                                     </h2>
                                     <p className="text-gray-500">A legacy of excellence, integrity, and community service.</p>
                                 </div>
@@ -534,21 +534,17 @@ const Memories = () => {
                                         )}
 
                                         <div className="relative">
-                                            {!viewingMemory && (
-                                                <>
-                                                    <input
-                                                        type="file"
-                                                        multiple
-                                                        accept="image/*"
-                                                        onChange={handleFileChange}
-                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                    />
-                                                    <button className="flex items-center gap-2 px-6 py-3 bg-purple-100 text-purple-600 font-medium rounded-xl hover:bg-purple-200 transition-colors pointer-events-none">
-                                                        <Upload className="w-5 h-5" />
-                                                        {selectedFiles.length > 0 ? 'Add More Photos' : 'Upload Photos'}
-                                                    </button>
-                                                </>
-                                            )}
+                                            <input
+                                                type="file"
+                                                multiple
+                                                accept="image/*"
+                                                onChange={handleFileChange}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            />
+                                            <button className="flex items-center gap-2 px-6 py-3 bg-purple-100 text-purple-600 font-medium rounded-xl hover:bg-purple-200 transition-colors pointer-events-none">
+                                                <Upload className="w-5 h-5" />
+                                                {selectedFiles.length > 0 ? 'Add More Photos' : 'Upload Photos'}
+                                            </button>
                                         </div>
                                         {selectedFiles.length > 0 && (
                                             <p className="mt-3 text-sm text-gray-500">
@@ -569,8 +565,7 @@ const Memories = () => {
                                     onChange={(e) => setMemoryDescription(e.target.value)}
                                     placeholder="Tell your story"
                                     rows={8}
-                                    readOnly={!!viewingMemory}
-                                    className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none ${viewingMemory ? 'bg-gray-100' : ''}`}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                                 />
                             </div>
 
@@ -591,10 +586,7 @@ const Memories = () => {
                                 <button
                                     onClick={handleSaveMemory}
                                     disabled={isSubmitting}
-                                    className={`px-8 py-3 font-medium rounded-xl transition-colors shadow-lg shadow-purple-200 flex items-center gap-2 ${viewingMemory
-                                        ? 'bg-purple-600 text-white hover:bg-purple-700'
-                                        : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-70 disabled:cursor-not-allowed'
-                                        }`}
+                                    className="px-8 py-3 bg-purple-600 text-white font-medium rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {isSubmitting ? (
                                         <>
@@ -602,9 +594,89 @@ const Memories = () => {
                                             Saving...
                                         </>
                                     ) : (
-                                        viewingMemory ? 'Close' : 'Share your Memory'
+                                        'Share your Memory'
                                     )}
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View Memory Modal */}
+            {isModalOpen && viewingMemory && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+                        {/* Header */}
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">Memory Details</h2>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Shared on {viewingMemory.date}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setIsModalOpen(false);
+                                    setMemoryDescription('');
+                                    setViewingMemory(null);
+                                }}
+                                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 hover:text-gray-700 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-0">
+                            <div className="flex flex-col md:flex-row h-full">
+                                {/* Left Side: Images */}
+                                <div className="w-full md:w-1/2 bg-gray-100 min-h-[300px] md:min-h-[500px] relative flex flex-col justify-center">
+                                    {viewingMemory.images && viewingMemory.images.length > 0 ? (
+                                        <div className="h-full w-full">
+                                            <ImageSlider images={viewingMemory.images} className="h-full w-full object-contain" />
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center h-full text-gray-400 p-8">
+                                            <Image className="w-16 h-16 mb-4 opacity-50" />
+                                            <span className="text-lg font-medium">No Images</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Right Side: Content */}
+                                <div className="w-full md:w-1/2 p-8 flex flex-col">
+                                    <div className="mb-6">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <div className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${viewingMemory.isApproved
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-yellow-100 text-yellow-700'
+                                                }`}>
+                                                {viewingMemory.isApproved ? 'Approved' : 'Pending Review'}
+                                            </div>
+                                            <span className="text-sm text-gray-400">
+                                                ID: #{viewingMemory.id}
+                                            </span>
+                                        </div>
+
+                                        <h3 className="text-xl font-bold text-gray-900 mb-4">Description</h3>
+                                        <div className="prose prose-purple max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap">
+                                            {viewingMemory.description || "No description provided."}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-auto pt-6 border-t border-gray-100">
+                                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                                            <div className="flex items-center gap-2">
+                                                <User className="w-4 h-4" />
+                                                <span>You</span>
+                                            </div>
+                                            <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                                            <div>
+                                                {viewingMemory.batch}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
