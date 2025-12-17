@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { adminLogin, alumniLogin, User } from '../api/authApi';
+import { alumniApi } from '../api/alumniApi';
+import { API_BASE_URL } from '../api/apiClient';
 
 interface AuthContextType {
     user: User | null;
@@ -48,15 +50,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 response = await alumniLogin({ email, password });
             }
 
-            // Store tokens and user data
+            // Store tokens first so apiClient can use them
             localStorage.setItem('accessToken', response.accessToken);
             localStorage.setItem('refreshToken', response.refreshToken);
-            localStorage.setItem('user', JSON.stringify(response.user));
-
             // Also store in the old format for backward compatibility with apiClient
             localStorage.setItem('authToken', response.accessToken);
 
-            setUser(response.user);
+            let userData = response.user;
+
+            // If alumni, fetch profile details to get the photo
+            if (userType === 'alumni') {
+                try {
+                    const profileData = await alumniApi.getAlumniCurrentProfile();
+                    if (profileData && profileData.photos && profileData.photos.length > 0) {
+                        const photoUrl = `${API_BASE_URL}${profileData.photos[0]}`;
+                        // Update user object with profile image
+                        userData = {
+                            ...userData,
+                            profileImage: photoUrl
+                        };
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch alumni profile details on login:', error);
+                    // Continue with basic user data if profile fetch fails
+                }
+            }
+
+            localStorage.setItem('user', JSON.stringify(userData));
+            setUser(userData);
             return true;
         } catch (error) {
             console.error('Login failed:', error);

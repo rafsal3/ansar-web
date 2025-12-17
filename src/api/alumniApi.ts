@@ -59,6 +59,26 @@ export interface AlumniDetails {
     } | null;
 }
 
+export interface AlumniProfile {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    course: string;
+    startYear: number;
+    endYear: number;
+    className: string;
+    instagram: string | null;
+    facebook: string | null;
+    whatsapp: string | null;
+    job: {
+        id: number;
+        name: string;
+    } | null;
+    photos: string[];
+    isActive: boolean;
+}
+
 export interface AlumniPagination {
     total: number;
     page: number;
@@ -117,6 +137,34 @@ export const alumniApi = {
 
     getAlumniById: async (id: number) => {
         const response = await apiClient.get<AlumniDetails>(`/alumini/${id}`);
+        return response.data;
+    },
+
+    getAlumniCurrentProfile: async () => {
+        const response = await apiClient.get<AlumniProfile>('/alumini/me');
+        return response.data;
+    },
+
+    updateAlumniProfile: async (data: any) => {
+        const formData = new FormData();
+        Object.keys(data).forEach(key => {
+            if (key === 'photos') {
+                // If it's a file object, append it. If it's a string (existing URL), maybe ignore or handle differently?
+                // The user request says "submit the updated profile data as form-data".
+                // Usually for file upload, we append the file.
+                if (data.photos instanceof File) {
+                    formData.append('photos', data.photos);
+                }
+            } else if (data[key] !== null && data[key] !== undefined) {
+                formData.append(key, data[key]);
+            }
+        });
+
+        const response = await apiClient.put('/alumini/update-me', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
         return response.data;
     }
 };

@@ -77,8 +77,9 @@ apiClient.interceptors.response.use(
                 }
 
                 // Call refresh endpoint - using axios directly to avoid circular dependency
+                // Try with refreshToken (camelCase) first, as that's the standard format
                 const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-                    refresh_token: refreshToken
+                    refreshToken: refreshToken
                 });
 
                 const { accessToken, refreshToken: newRefreshToken } = response.data;
@@ -98,7 +99,8 @@ apiClient.interceptors.response.use(
                 // Update the header for the original request
                 originalRequest.headers['Authorization'] = 'Bearer ' + accessToken;
                 return apiClient(originalRequest);
-            } catch (refreshError) {
+            } catch (refreshError: any) {
+                console.error('Token refresh failed:', refreshError.response?.data || refreshError.message);
                 processQueue(refreshError, null);
 
                 // Clear all auth data
