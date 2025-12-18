@@ -54,7 +54,10 @@ export const deleteJob = async (id: number) => {
     return response.data;
 };
 
-export const getAllJobs = async (): Promise<JobsResponse> => {
-    const response = await apiClient.get('/job/');
+export const getAllJobs = async (page: number = 1, limit: number = 5): Promise<JobsResponse> => {
+    const response = await apiClient.get('/job/', {
+        params: { page, limit }
+    });
     return response.data;
 };
+

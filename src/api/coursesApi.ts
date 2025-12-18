@@ -36,9 +36,11 @@ export const coursesApi = {
         return response.data;
     },
 
-    // Get all courses (with optional pagination, though user didn't specify query params yet, we'll keep it simple)
-    getAllCourses: async () => {
-        const response = await apiClient.get<CoursesResponse>('/courses');
+    // Get all courses (with pagination)
+    getAllCourses: async (page: number = 1, limit: number = 5) => {
+        const response = await apiClient.get<CoursesResponse>('/courses', {
+            params: { page, limit }
+        });
         return response.data;
     },
 
