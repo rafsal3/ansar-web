@@ -13,6 +13,7 @@ const OccupationAlumni = () => {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
     const [selectedJobName, setSelectedJobName] = useState<string>('');
+    const [selectedJobIcon, setSelectedJobIcon] = useState<string>('');
     const [alumni, setAlumni] = useState<Alumni[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -31,6 +32,7 @@ const OccupationAlumni = () => {
                     setSelectedJobId(jobId);
                     const job = jobsResponse.data.find(j => j.id === jobId);
                     setSelectedJobName(job?.name || location.state?.jobName || '');
+                    setSelectedJobIcon(job?.icon || '');
                 }
             } catch (err) {
                 console.error('Error fetching jobs:', err);
@@ -73,6 +75,7 @@ const OccupationAlumni = () => {
         if (job) {
             setSelectedJobId(jobId);
             setSelectedJobName(job.name);
+            setSelectedJobIcon(job.icon);
             navigate(`/alumni/occupation/${jobId}`, { state: { jobName: job.name } });
         }
     };
@@ -105,6 +108,13 @@ const OccupationAlumni = () => {
         if (!photoPath) return null;
         if (photoPath.startsWith('http')) return photoPath;
         return `${apiClient.defaults.baseURL}${photoPath}`;
+    };
+
+    // Get full icon URL
+    const getIconUrl = (iconPath: string) => {
+        if (!iconPath) return null;
+        if (iconPath.startsWith('http')) return iconPath;
+        return `${apiClient.defaults.baseURL}${iconPath}`;
     };
 
     if (loading && selectedJobId !== null) {
@@ -152,8 +162,27 @@ const OccupationAlumni = () => {
 
                     <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="p-4 bg-gradient-to-br from-teal-500 to-blue-500 rounded-2xl">
-                                <Briefcase className="w-8 h-8 text-white" />
+                            <div className="p-4 bg-gradient-to-br from-teal-500 to-blue-500 rounded-2xl overflow-hidden">
+                                {selectedJobIcon && getIconUrl(selectedJobIcon) ? (
+                                    <img
+                                        src={getIconUrl(selectedJobIcon)!}
+                                        alt={selectedJobName}
+                                        className="w-8 h-8 object-cover"
+                                        onError={(e) => {
+                                            // Fallback to Briefcase icon if image fails to load
+                                            const target = e.target as HTMLImageElement;
+                                            target.style.display = 'none';
+                                            const parent = target.parentElement;
+                                            if (parent) {
+                                                const icon = document.createElement('div');
+                                                icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-briefcase"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
+                                                parent.appendChild(icon);
+                                            }
+                                        }}
+                                    />
+                                ) : (
+                                    <Briefcase className="w-8 h-8 text-white" />
+                                )}
                             </div>
                             <div>
                                 <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900">

@@ -3,6 +3,7 @@ import { Briefcase, Users, TrendingUp, ArrowLeft, Loader2 } from 'lucide-react';
 import { getAllJobs, Job } from '@/api/jobApi';
 import { alumniApi } from '@/api/alumniApi';
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '@/api/apiClient';
 
 interface JobWithCount extends Job {
     count: number;
@@ -73,6 +74,13 @@ const Occupations = () => {
             'from-amber-500 to-orange-500',
         ];
         return gradients[index % gradients.length];
+    };
+
+    // Get full icon URL
+    const getIconUrl = (iconPath: string) => {
+        if (!iconPath) return null;
+        if (iconPath.startsWith('http')) return iconPath;
+        return `${API_BASE_URL}${iconPath}`;
     };
 
     if (loading) {
@@ -147,48 +155,71 @@ const Occupations = () => {
                 {/* Occupation Cards Grid */}
                 {jobs.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {jobs.map((job, index) => (
-                            <button
-                                key={job.id}
-                                onClick={() => handleOccupationClick(job.id, job.name)}
-                                className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 overflow-hidden text-left"
-                            >
-                                {/* Gradient Background on Hover */}
-                                <div className={`absolute inset-0 bg-gradient-to-br ${getGradient(index)} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                        {jobs.map((job, index) => {
+                            const iconUrl = getIconUrl(job.icon);
 
-                                {/* Content */}
-                                <div className="relative z-10 flex flex-col h-full">
-                                    {/* Icon and Briefcase */}
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${getGradient(index)} flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
-                                            <Briefcase className="w-8 h-8 text-white" />
+                            return (
+                                <button
+                                    key={job.id}
+                                    onClick={() => handleOccupationClick(job.id, job.name)}
+                                    className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 overflow-hidden text-left"
+                                >
+                                    {/* Gradient Background on Hover */}
+                                    <div className={`absolute inset-0 bg-gradient-to-br ${getGradient(index)} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+
+                                    {/* Content */}
+                                    <div className="relative z-10 flex flex-col h-full">
+                                        {/* Icon and Briefcase */}
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${getGradient(index)} flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300 flex-shrink-0 overflow-hidden`}>
+                                                {iconUrl ? (
+                                                    <img
+                                                        src={iconUrl}
+                                                        alt={job.name}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            // Fallback to Briefcase icon if image fails to load
+                                                            const target = e.target as HTMLImageElement;
+                                                            target.style.display = 'none';
+                                                            const parent = target.parentElement;
+                                                            if (parent) {
+                                                                const icon = document.createElement('div');
+                                                                icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>';
+                                                                parent.appendChild(icon);
+                                                            }
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <Briefcase className="w-8 h-8 text-white" />
+                                                )}
+                                            </div>
+                                            <Briefcase className="w-5 h-5 text-gray-400 group-hover:text-teal-600 transition-colors flex-shrink-0" />
                                         </div>
-                                        <Briefcase className="w-5 h-5 text-gray-400 group-hover:text-teal-600 transition-colors flex-shrink-0" />
-                                    </div>
 
-                                    {/* Occupation Name */}
-                                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors line-clamp-2">
-                                        {job.name}
-                                    </h3>
+                                        {/* Occupation Name */}
+                                        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors line-clamp-2">
+                                            {job.name}
+                                        </h3>
 
-                                    {/* Count */}
-                                    <div className="flex items-baseline gap-2 mb-4">
-                                        <span className="text-4xl font-extrabold text-gray-900 group-hover:text-teal-600 transition-colors">
-                                            {job.count}
-                                        </span>
-                                        <span className="text-sm text-gray-500 font-medium">alumni</span>
-                                    </div>
+                                        {/* Count */}
+                                        <div className="flex items-baseline gap-2 mb-4">
+                                            <span className="text-4xl font-extrabold text-gray-900 group-hover:text-teal-600 transition-colors">
+                                                {job.count}
+                                            </span>
+                                            <span className="text-sm text-gray-500 font-medium">alumni</span>
+                                        </div>
 
-                                    {/* Hover Indicator */}
-                                    <div className="mt-auto pt-2 flex items-center gap-2 text-sm font-semibold text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                        <span>View Details</span>
-                                        <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
+                                        {/* Hover Indicator */}
+                                        <div className="mt-auto pt-2 flex items-center gap-2 text-sm font-semibold text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <span>View Details</span>
+                                            <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </div>
                                     </div>
-                                </div>
-                            </button>
-                        ))}
+                                </button>
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
