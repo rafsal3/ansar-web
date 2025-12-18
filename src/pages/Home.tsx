@@ -70,7 +70,7 @@ const Home = () => {
           <div className="section-header">
             <h2 className="section-title">Latest News</h2>
             <button
-              className="see-more-btn"
+              className="see-more-btn see-more-desktop"
               onClick={() => navigate("/news")}
             >
               See More →
@@ -119,6 +119,13 @@ const Home = () => {
               ))}
             </div>
           )}
+
+          <button
+            className="see-more-btn see-more-mobile"
+            onClick={() => navigate("/news")}
+          >
+            See More →
+          </button>
         </div>
       </section>
 
@@ -128,7 +135,7 @@ const Home = () => {
           <div className="section-header">
             <h2 className="section-title">Upcoming Events</h2>
             <button
-              className="see-more-btn"
+              className="see-more-btn see-more-desktop"
               onClick={() => navigate("/events")}
             >
               See More →
@@ -180,6 +187,13 @@ const Home = () => {
               ))}
             </div>
           )}
+
+          <button
+            className="see-more-btn see-more-mobile"
+            onClick={() => navigate("/events")}
+          >
+            See More →
+          </button>
         </div>
       </section>
     </div>
