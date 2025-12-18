@@ -1,0 +1,268 @@
+/* ================= LATEST NEWS & EVENTS SECTIONS ================= */
+
+.latest-news-section,
+.latest-events-section {
+    padding: 60px 20px;
+    background: #ffffff;
+}
+
+.section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.section-title {
+    font-size: 1.875rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    letter-spacing: -0.025em;
+}
+
+.see-more-btn {
+    padding: 8px 20px;
+    background: #111827;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.see-more-btn:hover {
+    background: #374151;
+}
+
+.see-more-mobile {
+    display: none;
+    margin-top: 24px;
+}
+
+.see-more-desktop {
+    display: block;
+}
+
+/* ================= CARDS GRID ================= */
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+/* ================= NEWS & EVENT CARDS ================= */
+
+.news-card,
+.event-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.news-card:hover,
+.event-card:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: #f3f4f6;
+}
+
+.card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    background: #f9fafb;
+    color: #9ca3af;
+}
+
+.card-category,
+.event-status {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 4px 12px;
+    background: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.event-status.upcoming {
+    background: #111827;
+    color: white;
+}
+
+.event-status.completed {
+    background: #e5e7eb;
+    color: #6b7280;
+}
+
+.card-content {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: auto;
+}
+
+.card-date {
+    font-size: 0.875rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ================= LOADING STATES ================= */
+
+.loading-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.skeleton-card {
+    background: #f3f4f6;
+    border-radius: 8px;
+    height: 340px;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ================= ERROR & EMPTY STATES ================= */
+
+.error-message,
+.empty-message {
+    text-align: center;
+    padding: 48px 20px;
+    font-size: 0.875rem;
+    color: #6b7280;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.error-message {
+    color: #dc2626;
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+/* ================= RESPONSIVE DESIGN ================= */
+
+@media (max-width: 768px) {
+
+    .latest-news-section,
+    .latest-events-section {
+        padding: 40px 16px;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .cards-grid,
+    .loading-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .see-more-desktop {
+        display: none;
+    }
+
+    .see-more-mobile {
+        display: block;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-title {
+        font-size: 1.25rem;
+    }
+
+    .card-image-wrapper {
+        height: 160px;
+    }
+
+    .card-content {
+        padding: 16px;
+    }
+
+    .card-title {
+        font-size: 1rem;
+    }
+}

@@ -187,5 +187,19 @@ export const alumniApi = {
             },
         });
         return response.data;
+    },
+
+    filterAlumni: async (jobId?: number, page: number = 1, limit: number = 10) => {
+        const params = new URLSearchParams({
+            page: page.toString(),
+            limit: limit.toString(),
+        });
+
+        if (jobId) {
+            params.append('jobId', jobId.toString());
+        }
+
+        const response = await apiClient.get<AlumniResponse>(`/alumini/filter?${params.toString()}`);
+        return response.data;
     }
 };
