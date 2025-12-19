@@ -22,6 +22,7 @@ const Memories = () => {
     const [selectedBatch, setSelectedBatch] = useState<string>('Class of 2010');
     const [sortBy, setSortBy] = useState<string>('Sort by Date');
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [myMemoriesPage, setMyMemoriesPage] = useState<number>(1);
     const [activeTab, setActiveTab] = useState<TabType>('all');
 
     // Modal State
@@ -35,6 +36,7 @@ const Memories = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isMyMemoriesLoading, setIsMyMemoriesLoading] = useState<boolean>(false);
     const [totalPages, setTotalPages] = useState<number>(1);
+    const [myMemoriesTotalPages, setMyMemoriesTotalPages] = useState<number>(1);
 
     const batches: string[] = ['Class of 2010', 'Class of 2011', 'Class of 2012', 'Class of 2013', 'Class of 2014'];
     const sortOptions: string[] = ['Sort by Date', 'Sort by Name', 'Sort by Batch'];
@@ -67,7 +69,7 @@ const Memories = () => {
         if (!user) return;
         try {
             setIsMyMemoriesLoading(true);
-            const response = await memoryApi.getMyMemories(1, 100); // Fetch all or paginate similarly if needed
+            const response = await memoryApi.getMyMemories(myMemoriesPage, 9); // limit 9 for grid layout
 
             const formattedMemories: Memory[] = response.data.map((item: MyMemory) => ({
                 id: item.id,
@@ -82,6 +84,7 @@ const Memories = () => {
             }));
 
             setMyMemoriesList(formattedMemories);
+            setMyMemoriesTotalPages(response.pagination.totalPages);
         } catch (error) {
             console.error("Failed to fetch my memories:", error);
         } finally {
@@ -95,7 +98,7 @@ const Memories = () => {
         } else if (activeTab === 'my') {
             fetchMyMemories();
         }
-    }, [currentPage, activeTab]);
+    }, [currentPage, myMemoriesPage, activeTab]);
 
 
     const handleDeleteMemory = async (id: number): Promise<void> => {
@@ -215,17 +218,25 @@ const Memories = () => {
                         ) : myMemoriesList.length === 0 ? (
                             <EmptyMemoriesState onShare={() => setIsShareModalOpen(true)} />
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {myMemoriesList.map((memory) => (
-                                    <MemoryCard
-                                        key={memory.id}
-                                        memory={memory}
-                                        isOwner={true}
-                                        onView={(m) => setViewingMemory(m)}
-                                        onDelete={handleDeleteMemory}
-                                    />
-                                ))}
-                            </div>
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                                    {myMemoriesList.map((memory) => (
+                                        <MemoryCard
+                                            key={memory.id}
+                                            memory={memory}
+                                            isOwner={true}
+                                            onView={(m) => setViewingMemory(m)}
+                                            onDelete={handleDeleteMemory}
+                                        />
+                                    ))}
+                                </div>
+
+                                <Pagination
+                                    currentPage={myMemoriesPage}
+                                    totalPages={myMemoriesTotalPages}
+                                    onPageChange={setMyMemoriesPage}
+                                />
+                            </>
                         )}
                     </div>
                 )}
