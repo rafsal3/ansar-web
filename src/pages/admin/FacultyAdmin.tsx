@@ -3,12 +3,19 @@ import { Plus, Pencil, Trash2, Search, Mail, Phone, GraduationCap, X, Upload, Lo
 import { fetchAllFaculty, createFaculty, updateFaculty, deleteFaculty, getFacultyById, Faculty, DEPARTMENT_IDS } from '../../api/facultyApi';
 import { getAllJobs, Job } from '../../api/jobApi';
 import { API_BASE_URL } from '../../api/apiClient';
+import Pagination from '../../components/Pagination';
 
 const FacultyAdmin = () => {
     const [facultyMembers, setFacultyMembers] = useState<Faculty[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPrevPage, setHasPrevPage] = useState(false);
 
     // Create/Edit Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,11 +36,15 @@ const FacultyAdmin = () => {
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
-    const loadFaculty = async () => {
+    const loadFaculty = async (page: number = 1) => {
         try {
             setLoading(true);
-            const response = await fetchAllFaculty(1, 100, searchQuery);
+            const response = await fetchAllFaculty(page, 5, searchQuery);
             setFacultyMembers(response.data);
+            setCurrentPage(response.meta.page);
+            setTotalPages(response.meta.totalPages);
+            setHasNextPage(response.meta.hasNextPage);
+            setHasPrevPage(response.meta.hasPrevPage);
             setError(null);
         } catch (err) {
             console.error('Failed to fetch faculty:', err);
@@ -54,11 +65,16 @@ const FacultyAdmin = () => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            loadFaculty();
+            loadFaculty(1);
+            setCurrentPage(1);
         }, 500);
 
         return () => clearTimeout(timer);
     }, [searchQuery]);
+
+    useEffect(() => {
+        loadFaculty(currentPage);
+    }, [currentPage]);
 
     useEffect(() => {
         loadJobs();
@@ -132,7 +148,7 @@ const FacultyAdmin = () => {
         try {
             await deleteFaculty(id);
             alert('Faculty member deleted successfully');
-            loadFaculty();
+            loadFaculty(currentPage);
         } catch (err) {
             console.error('Failed to delete faculty:', err);
             alert('Failed to delete faculty member');
@@ -208,7 +224,8 @@ const FacultyAdmin = () => {
 
             // Reset form and close modal
             closeModal();
-            loadFaculty();
+            loadFaculty(1);
+            setCurrentPage(1);
         } catch (err: any) {
             console.error('Failed to save faculty:', err);
             const errorMessage = err.response?.data?.message || 'Failed to save faculty member';
@@ -342,6 +359,15 @@ const FacultyAdmin = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    hasNextPage={hasNextPage}
+                    hasPrevPage={hasPrevPage}
+                />
             </div>
 
             {/* Create/Edit Modal */}

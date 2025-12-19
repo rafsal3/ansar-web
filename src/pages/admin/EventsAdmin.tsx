@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Search, X, Upload, Calendar, MapPin } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Upload, Calendar, MapPin } from 'lucide-react';
 import { getAllEvents, Event, createEvent, updateEvent, deleteEvent, CreateEventPayload } from '../../api/eventsApi';
 import { API_BASE_URL } from '../../api/apiClient';
+import Pagination from '../../components/Pagination';
 
 const EventsAdmin = () => {
     const [events, setEvents] = useState<Event[]>([]);
@@ -12,8 +13,11 @@ const EventsAdmin = () => {
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
-    // Search state
-    const [searchQuery, setSearchQuery] = useState('');
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPrevPage, setHasPrevPage] = useState(false);
 
     // Form States
     const [formData, setFormData] = useState<Partial<CreateEventPayload>>({
@@ -28,14 +32,18 @@ const EventsAdmin = () => {
 
     // Fetch events on component mount
     useEffect(() => {
-        fetchEvents();
-    }, []);
+        fetchEvents(currentPage);
+    }, [currentPage]);
 
-    const fetchEvents = async () => {
+    const fetchEvents = async (page: number = 1) => {
         try {
             setLoading(true);
-            const response = await getAllEvents();
+            const response = await getAllEvents({ page, limit: 5 });
             setEvents(response.data);
+            setCurrentPage(response.meta.page);
+            setTotalPages(response.meta.totalPages);
+            setHasNextPage(response.meta.page < response.meta.totalPages);
+            setHasPrevPage(response.meta.page > 1);
             setError(null);
         } catch (err) {
             console.error('Failed to fetch events:', err);
@@ -119,7 +127,8 @@ const EventsAdmin = () => {
                 console.log('Create result:', result);
             }
 
-            await fetchEvents(); // Refresh the list
+            await fetchEvents(1); // Refresh the list
+            setCurrentPage(1);
             setIsModalOpen(false);
         } catch (err: any) {
             console.error('Failed to save event:', err);
@@ -135,18 +144,12 @@ const EventsAdmin = () => {
 
         try {
             await deleteEvent(id);
-            await fetchEvents(); // Refresh the list
+            await fetchEvents(currentPage); // Refresh the list
         } catch (err) {
             console.error('Failed to delete event:', err);
             alert('Failed to delete event. Please try again.');
         }
     };
-
-    // Filter events based on search
-    const filteredEvents = events.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesSearch;
-    });
 
     if (loading) {
         return (
@@ -180,20 +183,6 @@ const EventsAdmin = () => {
                 </button>
             </div>
 
-            {/* Search */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search events..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                </div>
-            </div>
-
             {/* Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="overflow-x-auto">
@@ -208,14 +197,14 @@ const EventsAdmin = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {filteredEvents.length === 0 ? (
+                            {events.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                                         No events found
                                     </td>
                                 </tr>
                             ) : (
-                                filteredEvents.map((item) => (
+                                events.map((item) => (
                                     <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <p className="font-medium text-gray-900">{item.name}</p>
@@ -262,6 +251,15 @@ const EventsAdmin = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    hasNextPage={hasNextPage}
+                    hasPrevPage={hasPrevPage}
+                />
             </div>
 
             {/* Modal */}
