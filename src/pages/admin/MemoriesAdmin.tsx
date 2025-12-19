@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Image as ImageIcon, Eye, X, Trash2, AlertTriangle } from 'lucide-react';
 import { memoryApi, AdminMemory } from '../../api/memoryApi';
 import { API_BASE_URL } from '../../api/apiClient';
+import Pagination from '../../components/Pagination';
 
 const MemoriesAdmin = () => {
     const [memories, setMemories] = useState<AdminMemory[]>([]);
@@ -10,6 +11,8 @@ const MemoriesAdmin = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
+    const [hasNextPage, setHasNextPage] = useState<boolean>(false);
+    const [hasPrevPage, setHasPrevPage] = useState<boolean>(false);
     const [selectedMemory, setSelectedMemory] = useState<AdminMemory | null>(null);
     const [confirmationModal, setConfirmationModal] = useState<{
         isOpen: boolean;
@@ -30,9 +33,12 @@ const MemoriesAdmin = () => {
     const fetchMemories = async () => {
         try {
             setLoading(true);
-            const response = await memoryApi.getAdminMemories(currentPage);
+            const response = await memoryApi.getAdminMemories(currentPage, 5);
             setMemories(response.data);
+            setCurrentPage(response.meta.page);
             setTotalPages(response.meta.totalPages);
+            setHasNextPage(response.meta.hasNextPage);
+            setHasPrevPage(response.meta.hasPrevPage);
             setError(null);
         } catch (err) {
             console.error('Failed to fetch memories:', err);
@@ -205,26 +211,14 @@ const MemoriesAdmin = () => {
                     </table>
                 </div>
 
-                {/* Pagination Controls */}
-                {!loading && totalPages > 1 && (
-                    <div className="flex justify-center items-center py-4 border-t border-gray-100">
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 mr-2 text-sm"
-                        >
-                            Previous
-                        </button>
-                        <span className="text-sm text-gray-600">Page {currentPage} of {totalPages}</span>
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 ml-2 text-sm"
-                        >
-                            Next
-                        </button>
-                    </div>
-                )}
+                {/* Pagination */}
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    hasNextPage={hasNextPage}
+                    hasPrevPage={hasPrevPage}
+                />
             </div>
 
             {/* View Memory Modal */}
@@ -311,8 +305,8 @@ const MemoriesAdmin = () => {
                                     handleStatusToggle(selectedMemory.id, selectedMemory.isApproved, selectedMemory.user.name);
                                 }}
                                 className={`px-4 py-2 font-medium rounded-lg text-white transition-colors ${selectedMemory.isApproved
-                                        ? 'bg-yellow-500 hover:bg-yellow-600'
-                                        : 'bg-teal-600 hover:bg-teal-700'
+                                    ? 'bg-yellow-500 hover:bg-yellow-600'
+                                    : 'bg-teal-600 hover:bg-teal-700'
                                     }`}
                             >
                                 {selectedMemory.isApproved ? 'Revoke Approval' : 'Approve Memory'}
@@ -364,8 +358,8 @@ const MemoriesAdmin = () => {
                                 <button
                                     type="button"
                                     className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm ${confirmationModal.actionType === 'delete'
-                                            ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
-                                            : (confirmationModal.newStatus ? 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500' : 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500')
+                                        ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
+                                        : (confirmationModal.newStatus ? 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500' : 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500')
                                         }`}
                                     onClick={confirmAction}
                                 >

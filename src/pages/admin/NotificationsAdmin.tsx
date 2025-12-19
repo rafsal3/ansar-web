@@ -9,6 +9,7 @@ import {
     CreateNotificationPayload
 } from '../../api/notificationApi';
 import { API_BASE_URL } from '../../api/apiClient';
+import Pagination from '../../components/Pagination';
 
 const NotificationsAdmin = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -18,6 +19,12 @@ const NotificationsAdmin = () => {
     const [editingNotification, setEditingNotification] = useState<Notification | null>(null);
     const [previewFile, setPreviewFile] = useState<string | null>(null);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPrevPage, setHasPrevPage] = useState(false);
 
     // Search state
     const [searchQuery, setSearchQuery] = useState('');
@@ -32,16 +39,22 @@ const NotificationsAdmin = () => {
 
     const [submitting, setSubmitting] = useState(false);
 
-    // Fetch notifications on component mount
+    // Fetch notifications on component mount and when page changes
     useEffect(() => {
-        fetchNotifications();
-    }, []);
+        fetchNotifications(currentPage);
+    }, [currentPage]);
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = async (page: number = 1) => {
         try {
             setLoading(true);
-            const response = await getAllNotifications();
+            const response = await getAllNotifications({ page, limit: 5 });
             setNotifications(response.data);
+            if (response.meta) {
+                setCurrentPage(response.meta.page);
+                setTotalPages(response.meta.totalPages);
+                setHasNextPage(response.meta.page < response.meta.totalPages);
+                setHasPrevPage(response.meta.page > 1);
+            }
             setError(null);
         } catch (err) {
             console.error('Failed to fetch notifications:', err);
@@ -117,7 +130,8 @@ const NotificationsAdmin = () => {
                 console.log('Create result:', result);
             }
 
-            await fetchNotifications(); // Refresh the list
+            await fetchNotifications(1); // Refresh the list
+            setCurrentPage(1);
             setIsModalOpen(false);
         } catch (err: any) {
             console.error('Failed to save notification:', err);
@@ -133,7 +147,7 @@ const NotificationsAdmin = () => {
 
         try {
             await deleteNotification(id);
-            await fetchNotifications(); // Refresh the list
+            await fetchNotifications(currentPage); // Refresh the list
         } catch (err) {
             console.error('Failed to delete notification:', err);
             alert('Failed to delete notification. Please try again.');
@@ -283,6 +297,15 @@ const NotificationsAdmin = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    hasNextPage={hasNextPage}
+                    hasPrevPage={hasPrevPage}
+                />
             </div>
 
             {/* Modal */}

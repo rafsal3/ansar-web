@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Search, BookOpen, X, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, BookOpen, X, Loader2 } from 'lucide-react';
 import { coursesApi, Course, CreateCourseData } from '../../api/coursesApi';
 import { toast } from 'react-hot-toast';
+import Pagination from '../../components/Pagination';
 
 const CoursesAdmin = () => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCourse, setEditingCourse] = useState<Course | null>(null);
     const [submitting, setSubmitting] = useState(false);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPrevPage, setHasPrevPage] = useState(false);
 
     const initialFormData: CreateCourseData = {
         name: '',
@@ -20,11 +26,15 @@ const CoursesAdmin = () => {
 
     const [formData, setFormData] = useState<CreateCourseData>(initialFormData);
 
-    const fetchCourses = async () => {
+    const fetchCourses = async (page: number = 1) => {
         try {
             setLoading(true);
-            const response = await coursesApi.getAllCourses();
+            const response = await coursesApi.getAllCourses(page, 5);
             setCourses(response.data);
+            setCurrentPage(response.meta.page);
+            setTotalPages(response.meta.totalPages);
+            setHasNextPage(response.meta.hasNextPage);
+            setHasPrevPage(response.meta.hasPrevPage);
         } catch (error) {
             console.error('Failed to fetch courses:', error);
             toast.error('Failed to load courses');
@@ -34,17 +44,8 @@ const CoursesAdmin = () => {
     };
 
     useEffect(() => {
-        fetchCourses();
-    }, []);
-
-    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchTerm(e.target.value);
-    };
-
-    const filteredCourses = courses.filter(course =>
-        course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.department.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+        fetchCourses(currentPage);
+    }, [currentPage]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -67,7 +68,8 @@ const CoursesAdmin = () => {
             }
             setIsModalOpen(false);
             resetForm();
-            fetchCourses();
+            setCurrentPage(1);
+            await fetchCourses(1);
         } catch (error) {
             console.error('Operation failed:', error);
             toast.error(editingCourse ? 'Failed to update course' : 'Failed to create course');
@@ -82,7 +84,7 @@ const CoursesAdmin = () => {
         try {
             await coursesApi.deleteCourse(id);
             toast.success('Course deleted successfully');
-            fetchCourses();
+            await fetchCourses(currentPage);
         } catch (error) {
             console.error('Delete failed:', error);
             toast.error('Failed to delete course');
@@ -127,19 +129,6 @@ const CoursesAdmin = () => {
                 </button>
             </div>
 
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search courses..."
-                        value={searchTerm}
-                        onChange={handleSearch}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                </div>
-            </div>
-
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -162,14 +151,14 @@ const CoursesAdmin = () => {
                                         </div>
                                     </td>
                                 </tr>
-                            ) : filteredCourses.length === 0 ? (
+                            ) : courses.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                                         No courses found
                                     </td>
                                 </tr>
                             ) : (
-                                filteredCourses.map((course) => (
+                                courses.map((course) => (
                                     <tr key={course.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
@@ -204,6 +193,15 @@ const CoursesAdmin = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    hasNextPage={hasNextPage}
+                    hasPrevPage={hasPrevPage}
+                />
             </div>
 
             {/* Modal */}

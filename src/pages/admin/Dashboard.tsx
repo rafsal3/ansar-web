@@ -33,14 +33,6 @@ const Dashboard = () => {
                     <StatCard key={index} {...stat} />
                 ))}
             </div>
-
-            {/* Recent Activity Section could go here */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Activity</h2>
-                <div className="space-y-4">
-                    <p className="text-gray-500 text-sm">No recent activity to show.</p>
-                </div>
-            </div>
         </div>
     );
 };

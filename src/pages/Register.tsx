@@ -259,16 +259,19 @@ const Register = () => {
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                             <Calendar className="h-5 w-5 text-gray-400" />
                                         </div>
-                                        <input
+                                        <select
                                             id="startYear"
                                             name="startYear"
-                                            type="text"
                                             required
                                             value={formData.startYear}
                                             onChange={handleChange}
-                                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                            placeholder="e.g. 2021"
-                                        />
+                                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all appearance-none bg-white"
+                                        >
+                                            <option value="">Select Start Year</option>
+                                            {Array.from({ length: new Date().getFullYear() - 1949 }, (_, i) => new Date().getFullYear() + 1 - i).map(year => (
+                                                <option key={year} value={year}>{year}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
 
@@ -281,16 +284,19 @@ const Register = () => {
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                             <Calendar className="h-5 w-5 text-gray-400" />
                                         </div>
-                                        <input
+                                        <select
                                             id="endYear"
                                             name="endYear"
-                                            type="text"
                                             required
                                             value={formData.endYear}
                                             onChange={handleChange}
-                                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                            placeholder="e.g. 2023"
-                                        />
+                                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all appearance-none bg-white"
+                                        >
+                                            <option value="">Select End Year</option>
+                                            {Array.from({ length: new Date().getFullYear() - 1949 }, (_, i) => new Date().getFullYear() + 1 - i).map(year => (
+                                                <option key={year} value={year}>{year}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
                             </div>

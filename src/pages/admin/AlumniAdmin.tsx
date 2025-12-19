@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, Phone, Mail, Instagram, Facebook, MessageCircle, Briefcase, AlertTriangle, X, Eye } from 'lucide-react';
+import { Phone, Mail, Instagram, Facebook, MessageCircle, Briefcase, AlertTriangle, X, Eye } from 'lucide-react';
 import { API_BASE_URL } from '../../api/apiClient';
 import { alumniApi, Alumni, AlumniPagination } from '../../api/alumniApi';
 import ViewAlumniModal from '../../components/admin/ViewAlumniModal';
+import Pagination from '../../components/Pagination';
 
 const AlumniAdmin = () => {
     const [alumni, setAlumni] = useState<Alumni[]>([]);
@@ -10,7 +11,6 @@ const AlumniAdmin = () => {
     const [error, setError] = useState<string | null>(null);
     const [pagination, setPagination] = useState<AlumniPagination | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [searchTerm, setSearchTerm] = useState('');
     const [confirmationModal, setConfirmationModal] = useState<{
         isOpen: boolean;
         alumniId: number | null;
@@ -33,7 +33,7 @@ const AlumniAdmin = () => {
     const fetchAlumni = async (page: number) => {
         try {
             setLoading(true);
-            const response = await alumniApi.getAllAlumniAdmin(page);
+            const response = await alumniApi.getAllAlumniAdmin(page, 5);
             setAlumni(response.data);
             setPagination(response.pagination);
             setError(null);
@@ -48,12 +48,6 @@ const AlumniAdmin = () => {
     useEffect(() => {
         fetchAlumni(currentPage);
     }, [currentPage]);
-
-    const filteredAlumni = alumni.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.course.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     const getPhotoUrl = (photos: string[]) => {
         if (photos && photos.length > 0) {
@@ -108,19 +102,6 @@ const AlumniAdmin = () => {
                 </div>
             </div>
 
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search alumni by name, email, or course..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                </div>
-            </div>
-
             {error && (
                 <div className="bg-red-50 text-red-600 p-4 rounded-lg">
                     {error}
@@ -147,14 +128,14 @@ const AlumniAdmin = () => {
                                         Loading alumni data...
                                     </td>
                                 </tr>
-                            ) : filteredAlumni.length === 0 ? (
+                            ) : alumni.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                                         No alumni found
                                     </td>
                                 </tr>
                             ) : (
-                                filteredAlumni.map((item) => (
+                                alumni.map((item) => (
                                     <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
@@ -260,93 +241,81 @@ const AlumniAdmin = () => {
                 </div>
 
                 {/* Pagination */}
-                {
-                    pagination && pagination.totalPages > 1 && (
-                        <div className="px-6 py-4 flex items-center justify-between border-t border-gray-100">
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                disabled={!pagination.hasPrevPage}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Previous
-                            </button>
-                            <span className="text-sm text-gray-700">
-                                Page {pagination.page} of {pagination.totalPages}
-                            </span>
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.totalPages))}
-                                disabled={!pagination.hasNextPage}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Next
-                            </button>
-                        </div>
-                    )
-                }
-            </div >
+                {pagination && (
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={pagination.totalPages}
+                        onPageChange={setCurrentPage}
+                        hasNextPage={pagination.hasNextPage}
+                        hasPrevPage={pagination.hasPrevPage}
+                    />
+                )}
+            </div>
 
             {/* Confirmation Modal */}
-            {confirmationModal.isOpen && (
+            {
+                confirmationModal.isOpen && (
 
-                <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-                    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                        {/* Background overlay */}
-                        <div
-                            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                            aria-hidden="true"
-                            onClick={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
-                        ></div>
+                    <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                            {/* Background overlay */}
+                            <div
+                                className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                                aria-hidden="true"
+                                onClick={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+                            ></div>
 
-                        {/* Modal panel */}
-                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                <div className="sm:flex sm:items-start">
-                                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
-                                        <AlertTriangle className="h-6 w-6 text-yellow-600" aria-hidden="true" />
-                                    </div>
-                                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                        <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                            {confirmationModal.newStatus ? 'Approve Alumni Account' : 'Deactivate Alumni Account'}
-                                        </h3>
-                                        <div className="mt-2">
-                                            <p className="text-sm text-gray-500">
-                                                Are you sure you want to {confirmationModal.newStatus ? 'approve' : 'deactivate'} the account for <strong>{confirmationModal.alumniName}</strong>?
-                                                {confirmationModal.newStatus
-                                                    ? ' This will verify their account and allow full access to the platform.'
-                                                    : ' This will restrict their access to the platform.'}
-                                            </p>
+                            {/* Modal panel */}
+                            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                    <div className="sm:flex sm:items-start">
+                                        <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                                            <AlertTriangle className="h-6 w-6 text-yellow-600" aria-hidden="true" />
+                                        </div>
+                                        <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                            <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                                {confirmationModal.newStatus ? 'Approve Alumni Account' : 'Deactivate Alumni Account'}
+                                            </h3>
+                                            <div className="mt-2">
+                                                <p className="text-sm text-gray-500">
+                                                    Are you sure you want to {confirmationModal.newStatus ? 'approve' : 'deactivate'} the account for <strong>{confirmationModal.alumniName}</strong>?
+                                                    {confirmationModal.newStatus
+                                                        ? ' This will verify their account and allow full access to the platform.'
+                                                        : ' This will restrict their access to the platform.'}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                    <button
+                                        type="button"
+                                        className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm ${confirmationModal.newStatus ? 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500' : 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
+                                            }`}
+                                        onClick={confirmStatusChange}
+                                    >
+                                        {confirmationModal.newStatus ? 'Approve' : 'Deactivate'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                        onClick={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
                                 <button
-                                    type="button"
-                                    className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm ${confirmationModal.newStatus ? 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500' : 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
-                                        }`}
-                                    onClick={confirmStatusChange}
-                                >
-                                    {confirmationModal.newStatus ? 'Approve' : 'Deactivate'}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                                     onClick={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+                                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
                                 >
-                                    Cancel
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
-                            <button
-                                onClick={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
-                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <ViewAlumniModal
                 isOpen={viewModal.isOpen}

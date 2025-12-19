@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getAllNews, News as NewsType } from '../api/newsApi';
 import { API_BASE_URL } from '../api/apiClient';
+import Pagination from '../components/Pagination';
 
 const News = () => {
     const [activeFilter, setActiveFilter] = useState('All');
@@ -10,16 +11,24 @@ const News = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const limit = 9; // Show 9 news items per page (3x3 grid)
+
     const filters = ['All', 'Academic', 'Admission', 'Cultural', 'Examination'];
 
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                // Determine params based on activeFilter if needed, keeping it simple for now as per 'getAllNews' generic use
+                setLoading(true);
                 const response = await getAllNews({
-                    category: activeFilter !== 'All' ? activeFilter.toLowerCase() : undefined
+                    category: activeFilter !== 'All' ? activeFilter.toLowerCase() : undefined,
+                    page: currentPage,
+                    limit: limit
                 });
                 setNewsItems(response.data);
+                setTotalPages(response.meta.totalPages);
             } catch (err) {
                 console.error("Failed to fetch news:", err);
                 setError("Failed to load news.");
@@ -29,7 +38,17 @@ const News = () => {
         };
 
         fetchNews();
+    }, [activeFilter, currentPage]);
+
+    // Reset to page 1 when filter changes
+    useEffect(() => {
+        setCurrentPage(1);
     }, [activeFilter]);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     if (loading) {
         return (
@@ -122,6 +141,17 @@ const News = () => {
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {!loading && !error && newsItems.length > 0 && (
+                    <div className="mt-8">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                        />
                     </div>
                 )}
             </div>

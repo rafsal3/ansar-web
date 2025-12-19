@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Search, Briefcase, Image as ImageIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Briefcase, Image as ImageIcon } from 'lucide-react';
 import { createJob, updateJob, deleteJob, getAllJobs, Job } from '../../api/jobApi';
 import { API_BASE_URL } from '../../api/apiClient';
+import Pagination from '../../components/Pagination';
 
 const OccupationsAdmin = () => {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPrevPage, setHasPrevPage] = useState(false);
 
     // Form states
     const [name, setName] = useState('');
@@ -14,15 +21,15 @@ const OccupationsAdmin = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingJob, setEditingJob] = useState<Job | null>(null);
 
-    const [searchTerm, setSearchTerm] = useState('');
-
-    const fetchJobs = async () => {
+    const fetchJobs = async (page: number = 1) => {
         try {
             setIsLoading(true);
-            const response = await getAllJobs();
-            // The API returns data wrapped in a data property which is an array of jobs
-            // Based on prompt: { message: "...", meta: {...}, data: [...] }
+            const response = await getAllJobs(page, 5);
             setJobs(response.data);
+            setCurrentPage(response.meta.page);
+            setTotalPages(response.meta.totalPages);
+            setHasNextPage(response.meta.hasNextPage);
+            setHasPrevPage(response.meta.hasPrevPage);
         } catch (error) {
             console.error('Failed to fetch jobs:', error);
         } finally {
@@ -31,8 +38,8 @@ const OccupationsAdmin = () => {
     };
 
     useEffect(() => {
-        fetchJobs();
-    }, []);
+        fetchJobs(currentPage);
+    }, [currentPage]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -61,7 +68,8 @@ const OccupationsAdmin = () => {
             }
 
             // Refresh list and reset form
-            await fetchJobs();
+            setCurrentPage(1); // Reset to first page
+            await fetchJobs(1);
             handleCloseModal();
         } catch (error) {
             console.error('Failed to save job:', error);
@@ -85,7 +93,7 @@ const OccupationsAdmin = () => {
 
         try {
             await deleteJob(id);
-            await fetchJobs();
+            await fetchJobs(currentPage);
         } catch (error) {
             console.error('Failed to delete job:', error);
             alert('Failed to delete job');
@@ -98,10 +106,6 @@ const OccupationsAdmin = () => {
         setName('');
         setSelectedFile(null);
     };
-
-    const filteredJobs = jobs.filter(job =>
-        job.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     return (
         <div className="space-y-6">
@@ -117,19 +121,6 @@ const OccupationsAdmin = () => {
                     <Plus className="w-5 h-5" />
                     Add Job
                 </button>
-            </div>
-
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search jobs..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -150,14 +141,14 @@ const OccupationsAdmin = () => {
                                         Loading jobs...
                                     </td>
                                 </tr>
-                            ) : filteredJobs.length === 0 ? (
+                            ) : jobs.length === 0 ? (
                                 <tr>
                                     <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
                                         No jobs found
                                     </td>
                                 </tr>
                             ) : (
-                                filteredJobs.map((item) => (
+                                jobs.map((item) => (
                                     <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center">
@@ -200,6 +191,15 @@ const OccupationsAdmin = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    hasNextPage={hasNextPage}
+                    hasPrevPage={hasPrevPage}
+                />
             </div>
 
             {/* Modal */}

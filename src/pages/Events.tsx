@@ -3,6 +3,7 @@ import { ArrowRight, Calendar, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getAllEvents, Event } from '../api/eventsApi';
 import { API_BASE_URL } from '../api/apiClient';
+import Pagination from '../components/Pagination';
 
 const Events = () => {
     const [events, setEvents] = useState<Event[]>([]);
@@ -10,17 +11,41 @@ const Events = () => {
     const [error, setError] = useState<string | null>(null);
     const [activeFilter, setActiveFilter] = useState('All');
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const limit = 9; // Show 9 events per page (3x3 grid)
+
     const filters = ['All', 'Upcoming', 'Completed'];
 
     useEffect(() => {
         fetchEvents();
-    }, []);
+    }, [activeFilter, currentPage]);
+
+    // Reset to page 1 when filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeFilter]);
 
     const fetchEvents = async () => {
         try {
             setLoading(true);
-            const response = await getAllEvents({ status: 'upcoming,completed' });
+
+            // Determine status parameter based on active filter
+            let statusParam = 'upcoming,completed';
+            if (activeFilter === 'Upcoming') {
+                statusParam = 'upcoming';
+            } else if (activeFilter === 'Completed') {
+                statusParam = 'completed';
+            }
+
+            const response = await getAllEvents({
+                status: statusParam,
+                page: currentPage,
+                limit: limit
+            });
             setEvents(response.data);
+            setTotalPages(response.meta.totalPages);
             setError(null);
         } catch (err) {
             console.error('Failed to fetch events:', err);
@@ -30,13 +55,13 @@ const Events = () => {
         }
     };
 
-    // Filter events based on active filter
-    const filteredEvents = events.filter(event => {
-        if (activeFilter === 'All') return true;
-        if (activeFilter === 'Upcoming') return event.status === 'upcoming';
-        if (activeFilter === 'Completed') return event.status === 'completed';
-        return true;
-    });
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Since we're now filtering on the server side, we can use events directly
+    const filteredEvents = events;
 
     // Separate upcoming and completed events
     const upcomingEvents = filteredEvents.filter(e => e.status === 'upcoming');
@@ -198,6 +223,17 @@ const Events = () => {
                     <div className="text-center py-12">
                         <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 text-lg">No events found</p>
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {!loading && !error && filteredEvents.length > 0 && (
+                    <div className="mt-12">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                        />
                     </div>
                 )}
             </div>

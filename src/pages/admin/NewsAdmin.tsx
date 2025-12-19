@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Search, X, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { getAllNews, News, createNews, updateNews, deleteNews, CreateNewsPayload } from '../../api/newsApi';
 import { API_BASE_URL } from '../../api/apiClient';
+import Pagination from '../../components/Pagination';
 
 
 
@@ -14,9 +15,11 @@ const NewsAdmin = () => {
     const [previewImages, setPreviewImages] = useState<string[]>([]);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
-    // Search and filter states
-    const [searchQuery, setSearchQuery] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('');
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPrevPage, setHasPrevPage] = useState(false);
 
     // Form States
     const [formData, setFormData] = useState<Partial<CreateNewsPayload>>({
@@ -31,14 +34,19 @@ const NewsAdmin = () => {
 
     // Fetch news on component mount
     useEffect(() => {
-        fetchNews();
-    }, []);
+        fetchNews(currentPage);
+    }, [currentPage]);
 
-    const fetchNews = async () => {
+    const fetchNews = async (page: number = 1) => {
         try {
             setLoading(true);
-            const response = await getAllNews({ status: 'publish,draft' });
+            const response = await getAllNews({ page, limit: 5, status: 'publish,draft' });
             setNews(response.data);
+            setCurrentPage(response.meta.page);
+            setTotalPages(response.meta.totalPages);
+            // Calculate hasNextPage and hasPrevPage from meta
+            setHasNextPage(response.meta.page < response.meta.totalPages);
+            setHasPrevPage(response.meta.page > 1);
             setError(null);
         } catch (err) {
             console.error('Failed to fetch news:', err);
@@ -120,7 +128,8 @@ const NewsAdmin = () => {
                 console.log('Create result:', result);
             }
 
-            await fetchNews(); // Refresh the list
+            await fetchNews(1); // Refresh the list
+            setCurrentPage(1);
             setIsModalOpen(false);
         } catch (err: any) {
             console.error('Failed to save news:', err);
@@ -136,19 +145,12 @@ const NewsAdmin = () => {
 
         try {
             await deleteNews(id);
-            await fetchNews(); // Refresh the list
+            await fetchNews(currentPage); // Refresh the list
         } catch (err) {
             console.error('Failed to delete news:', err);
             alert('Failed to delete news. Please try again.');
         }
     };
-
-    // Filter news based on search and category
-    const filteredNews = news.filter(item => {
-        const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = !categoryFilter || item.category === categoryFilter;
-        return matchesSearch && matchesCategory;
-    });
 
     if (loading) {
         return (
@@ -182,31 +184,6 @@ const NewsAdmin = () => {
                 </button>
             </div>
 
-            {/* Filters & Search */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search news..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                </div>
-                <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                >
-                    <option value="">All Categories</option>
-                    <option value="academic">Academic</option>
-                    <option value="events">Events</option>
-                    <option value="sports">Sports</option>
-                    <option value="infrastructure">Infrastructure</option>
-                </select>
-            </div>
-
             {/* Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="overflow-x-auto">
@@ -222,14 +199,14 @@ const NewsAdmin = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {filteredNews.length === 0 ? (
+                            {news.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                                         No news found
                                     </td>
                                 </tr>
                             ) : (
-                                filteredNews.map((item) => (
+                                news.map((item) => (
                                     <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <p className="font-medium text-gray-900">{item.title}</p>
@@ -276,146 +253,157 @@ const NewsAdmin = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    hasNextPage={hasNextPage}
+                    hasPrevPage={hasPrevPage}
+                />
             </div>
 
             {/* Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
-                            <h2 className="text-xl font-bold text-gray-900">
-                                {editingNews ? 'Edit News' : 'Add New News'}
-                            </h2>
-                            <button
-                                onClick={() => setIsModalOpen(false)}
-                                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.title}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                    placeholder="Enter news title"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                                    <select
-                                        value={formData.category}
-                                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                    >
-                                        <option value="academic">Academic</option>
-                                        <option value="events">Events</option>
-                                        <option value="infrastructure">Infrastructure</option>
-                                        <option value="sports">Sports</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                                    <select
-                                        value={formData.status}
-                                        onChange={(e) => setFormData({ ...formData, status: e.target.value as 'draft' | 'publish' })}
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                    >
-                                        <option value="draft">Draft</option>
-                                        <option value="publish">Publish</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                                <input
-                                    type="date"
-                                    required
-                                    value={formData.date}
-                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Images</label>
-                                <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-teal-500 transition-colors cursor-pointer relative">
-                                    <input
-                                        type="file"
-                                        multiple
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    />
-                                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                    <p className="text-sm text-gray-500">Click to upload images (Multiple allowed)</p>
-                                </div>
-
-                                {/* Image Preview Grid */}
-                                {previewImages.length > 0 && (
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                                        {previewImages.map((url, index) => (
-                                            <div key={index} className="relative group aspect-video rounded-lg overflow-hidden bg-gray-100">
-                                                <img
-                                                    src={url}
-                                                    alt={`Preview ${index}`}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeImage(index)}
-                                                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
-                                                    <X className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
-                                <textarea
-                                    rows={5}
-                                    value={formData.content}
-                                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                    placeholder="Write your news content here..."
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            {
+                isModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                        <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                                <h2 className="text-xl font-bold text-gray-900">
+                                    {editingNews ? 'Edit News' : 'Add New News'}
+                                </h2>
                                 <button
-                                    type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="px-6 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-medium"
-                                    disabled={submitting}
+                                    className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
                                 >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={submitting}
-                                >
-                                    {submitting ? 'Saving...' : (editingNews ? 'Save Changes' : 'Create News')}
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
-                        </form>
-                    </div>
-                </div>
-            )}
 
-        </div>
+                            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                        placeholder="Enter news title"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                                        <select
+                                            value={formData.category}
+                                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                        >
+                                            <option value="academic">Academic</option>
+                                            <option value="events">Events</option>
+                                            <option value="infrastructure">Infrastructure</option>
+                                            <option value="sports">Sports</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                        <select
+                                            value={formData.status}
+                                            onChange={(e) => setFormData({ ...formData, status: e.target.value as 'draft' | 'publish' })}
+                                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                        >
+                                            <option value="draft">Draft</option>
+                                            <option value="publish">Publish</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                    <input
+                                        type="date"
+                                        required
+                                        value={formData.date}
+                                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Images</label>
+                                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-teal-500 transition-colors cursor-pointer relative">
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        />
+                                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                        <p className="text-sm text-gray-500">Click to upload images (Multiple allowed)</p>
+                                    </div>
+
+                                    {/* Image Preview Grid */}
+                                    {previewImages.length > 0 && (
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                                            {previewImages.map((url, index) => (
+                                                <div key={index} className="relative group aspect-video rounded-lg overflow-hidden bg-gray-100">
+                                                    <img
+                                                        src={url}
+                                                        alt={`Preview ${index}`}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeImage(index)}
+                                                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                                    <textarea
+                                        rows={5}
+                                        value={formData.content}
+                                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                        placeholder="Write your news content here..."
+                                    />
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsModalOpen(false)}
+                                        className="px-6 py-2 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-medium"
+                                        disabled={submitting}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-6 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={submitting}
+                                    >
+                                        {submitting ? 'Saving...' : (editingNews ? 'Save Changes' : 'Create News')}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )
+            }
+
+        </div >
     );
 };
 

@@ -1,16 +1,28 @@
 import { useState, useEffect } from 'react';
 import { Clock, Users, Loader2 } from 'lucide-react';
 import { coursesApi, Course } from '../api/coursesApi';
+import Pagination from '../components/Pagination';
 
 const Courses = () => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPrevPage, setHasPrevPage] = useState(false);
+    const limit = 9; // Show 9 courses per page (3x3 grid)
+
     useEffect(() => {
         const fetchCourses = async () => {
             try {
-                const response = await coursesApi.getAllCourses();
+                setLoading(true);
+                const response = await coursesApi.getAllCourses(currentPage, limit);
                 setCourses(response.data);
+                setTotalPages(response.meta.totalPages);
+                setHasNextPage(response.meta.hasNextPage);
+                setHasPrevPage(response.meta.hasPrevPage);
             } catch (error) {
                 console.error('Failed to fetch courses:', error);
             } finally {
@@ -19,7 +31,12 @@ const Courses = () => {
         };
 
         fetchCourses();
-    }, []);
+    }, [currentPage]);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     if (loading) {
         return (
@@ -76,6 +93,19 @@ const Courses = () => {
                         ))
                     )}
                 </div>
+
+                {/* Pagination */}
+                {!loading && courses.length > 0 && (
+                    <div className="mt-8">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                            hasNextPage={hasNextPage}
+                            hasPrevPage={hasPrevPage}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );
