@@ -135,10 +135,15 @@ const Contact = () => {
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-8">Our Location</h2>
                     <div className="w-full h-96 bg-gray-200 rounded-3xl overflow-hidden shadow-sm">
-                        <img
-                            src="/images/map.png"
-                            alt="School Location Map"
-                            className="w-full h-full object-cover"
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3908.303384188563!2d75.62778087505808!3d11.60170624342951!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba686a4e43a9ea5%3A0xe8994ea446a9f435!2sANSAR%20JUNIOR%20COLLEGE!5e0!3m2!1sen!2sin!4v1766133715560!5m2!1sen!2sin"
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            title="ANSAR Junior College Location"
                         />
                     </div>
                 </div>
