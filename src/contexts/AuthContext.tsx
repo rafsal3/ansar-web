@@ -41,29 +41,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     const login = async (email: string, password: string, userType: 'alumni' | 'admin'): Promise<boolean> => {
-        try {
-            let response;
+        let response;
 
-            if (userType === 'admin') {
-                response = await adminLogin({ email, password });
-            } else {
-                response = await alumniLogin({ email, password });
-            }
-
-            // Store tokens and user data
-            localStorage.setItem('accessToken', response.accessToken);
-            localStorage.setItem('refreshToken', response.refreshToken);
-            localStorage.setItem('user', JSON.stringify(response.user));
-
-            // Also store in the old format for backward compatibility with apiClient
-            localStorage.setItem('authToken', response.accessToken);
-
-            setUser(response.user);
-            return true;
-        } catch (error) {
-            console.error('Login failed:', error);
-            return false;
+        if (userType === 'admin') {
+            response = await adminLogin({ email, password });
+        } else {
+            response = await alumniLogin({ email, password });
         }
+
+        // Store tokens and user data
+        localStorage.setItem('accessToken', response.accessToken);
+        localStorage.setItem('refreshToken', response.refreshToken);
+        localStorage.setItem('user', JSON.stringify(response.user));
+
+        // Also store in the old format for backward compatibility with apiClient
+        localStorage.setItem('authToken', response.accessToken);
+
+        setUser(response.user);
+        return true;
     };
 
     const logout = () => {

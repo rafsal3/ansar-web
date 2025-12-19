@@ -27,11 +27,18 @@ const Login = () => {
                 } else {
                     navigate('/');
                 }
-            } else {
-                setError('Invalid email or password');
             }
-        } catch (err) {
-            setError('An error occurred during login. Please try again.');
+        } catch (err: any) {
+            // Extract error message from the API response
+            let errorMessage = 'An error occurred during login. Please try again.';
+
+            if (err?.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            } else if (err?.message) {
+                errorMessage = err.message;
+            }
+
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -143,10 +150,23 @@ const Login = () => {
                             </a>
                         </div>
 
-                        {/* Error Message */}
+                        {/* Error/Warning Message */}
                         {error && (
-                            <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
-                                <p className="text-sm text-red-600 text-center">{error}</p>
+                            <div className={`p-4 rounded-xl border ${error.toLowerCase().includes('not yet approved') || error.toLowerCase().includes('not approved')
+                                    ? 'bg-amber-50 border-amber-200'
+                                    : 'bg-red-50 border-red-200'
+                                }`}>
+                                <p className={`text-sm text-center font-medium ${error.toLowerCase().includes('not yet approved') || error.toLowerCase().includes('not approved')
+                                        ? 'text-amber-800'
+                                        : 'text-red-600'
+                                    }`}>
+                                    {error}
+                                </p>
+                                {(error.toLowerCase().includes('not yet approved') || error.toLowerCase().includes('not approved')) && (
+                                    <p className="text-xs text-amber-600 text-center mt-2">
+                                        Your account is pending approval. Please contact the administrator for assistance.
+                                    </p>
+                                )}
                             </div>
                         )}
 
