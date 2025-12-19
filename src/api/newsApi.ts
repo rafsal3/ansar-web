@@ -126,3 +126,9 @@ export const deleteNews = async (id: number) => {
     const response = await apiClient.delete(`/news/${id}`);
     return response.data;
 };
+
+// Delete news image
+export const deleteNewsImage = async (imageId: number) => {
+    const response = await apiClient.delete(`/news/image/${imageId}`);
+    return response.data;
+};

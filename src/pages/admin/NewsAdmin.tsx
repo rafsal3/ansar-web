@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, X, Upload, Image as ImageIcon } from 'lucide-react';
-import { getAllNews, News, createNews, updateNews, deleteNews, CreateNewsPayload } from '../../api/newsApi';
+import { getAllNews, News, createNews, updateNews, deleteNews, CreateNewsPayload, NewsImage, deleteNewsImage } from '../../api/newsApi';
 import { API_BASE_URL } from '../../api/apiClient';
 import Pagination from '../../components/Pagination';
 
@@ -14,6 +14,7 @@ const NewsAdmin = () => {
     const [editingNews, setEditingNews] = useState<News | null>(null);
     const [previewImages, setPreviewImages] = useState<string[]>([]);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+    const [existingImages, setExistingImages] = useState<NewsImage[]>([]); // Track existing images
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -66,9 +67,9 @@ const NewsAdmin = () => {
                 date: newsItem.date,
                 content: newsItem.content || ''
             });
-            // Set preview images from existing news
-            const imageUrls = newsItem.images?.map(img => `${API_BASE_URL}${img.imageUrl}`) || [];
-            setPreviewImages(imageUrls);
+            // Set existing images from the news item
+            setExistingImages(newsItem.images || []);
+            setPreviewImages([]);
             setUploadedFiles([]);
         } else {
             setEditingNews(null);
@@ -79,6 +80,7 @@ const NewsAdmin = () => {
                 date: new Date().toISOString().split('T')[0],
                 content: ''
             });
+            setExistingImages([]);
             setPreviewImages([]);
             setUploadedFiles([]);
         }
@@ -97,6 +99,20 @@ const NewsAdmin = () => {
     const removeImage = (index: number) => {
         setPreviewImages(prev => prev.filter((_, i) => i !== index));
         setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleDeleteExistingImage = async (imageId: number) => {
+        if (!confirm('Are you sure you want to delete this image?')) return;
+
+        try {
+            await deleteNewsImage(imageId);
+            // Remove from existingImages state
+            setExistingImages(prev => prev.filter(img => img.id !== imageId));
+            alert('Image deleted successfully');
+        } catch (err) {
+            console.error('Failed to delete image:', err);
+            alert('Failed to delete image. Please try again.');
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -346,25 +362,53 @@ const NewsAdmin = () => {
                                         <p className="text-sm text-gray-500">Click to upload images (Multiple allowed)</p>
                                     </div>
 
-                                    {/* Image Preview Grid */}
+                                    {/* Existing Images */}
+                                    {existingImages.length > 0 && (
+                                        <div className="mt-4">
+                                            <p className="text-sm font-medium text-gray-700 mb-2">Existing Images</p>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                {existingImages.map((image) => (
+                                                    <div key={image.id} className="relative group aspect-video rounded-lg overflow-hidden bg-gray-100">
+                                                        <img
+                                                            src={`${API_BASE_URL}${image.imageUrl}`}
+                                                            alt={`Existing ${image.id}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteExistingImage(image.id)}
+                                                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* New Image Previews */}
                                     {previewImages.length > 0 && (
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                                            {previewImages.map((url, index) => (
-                                                <div key={index} className="relative group aspect-video rounded-lg overflow-hidden bg-gray-100">
-                                                    <img
-                                                        src={url}
-                                                        alt={`Preview ${index}`}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeImage(index)}
-                                                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <X className="w-3 h-3" />
-                                                    </button>
-                                                </div>
-                                            ))}
+                                        <div className="mt-4">
+                                            <p className="text-sm font-medium text-gray-700 mb-2">New Images to Upload</p>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                {previewImages.map((url, index) => (
+                                                    <div key={index} className="relative group aspect-video rounded-lg overflow-hidden bg-gray-100">
+                                                        <img
+                                                            src={url}
+                                                            alt={`Preview ${index}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeImage(index)}
+                                                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
