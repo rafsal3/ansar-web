@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, ChevronDown, Mail, Phone, GraduationCap } from 'lucide-react';
 import { fetchAllFaculty, Faculty as FacultyType } from '../api/facultyApi';
 import { API_BASE_URL } from '../api/apiClient';
+import Pagination from '../components/Pagination';
 
 const Faculty = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -11,11 +12,21 @@ const Faculty = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPrevPage, setHasPrevPage] = useState(false);
+    const limit = 12; // Show 12 faculty members per page
+
     const loadFaculty = async () => {
         try {
             setLoading(true);
-            const response = await fetchAllFaculty(1, 100, searchQuery); // Fetch up to 100 for now
+            const response = await fetchAllFaculty(currentPage, limit, searchQuery);
             setFacultyMembers(response.data);
+            setTotalPages(response.meta.totalPages);
+            setHasNextPage(response.meta.hasNextPage);
+            setHasPrevPage(response.meta.hasPrevPage);
             setError(null);
         } catch (err) {
             console.error('Failed to fetch faculty:', err);
@@ -31,7 +42,17 @@ const Faculty = () => {
         }, 500);
 
         return () => clearTimeout(timer);
+    }, [searchQuery, currentPage]);
+
+    // Reset to page 1 when search query changes
+    useEffect(() => {
+        setCurrentPage(1);
     }, [searchQuery]);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     return (
         <div className="bg-gray-50 min-h-screen py-12">
@@ -131,6 +152,19 @@ const Faculty = () => {
                 {!loading && !error && facultyMembers.length === 0 && (
                     <div className="text-center text-gray-500 py-12">
                         No faculty members found.
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {!loading && !error && facultyMembers.length > 0 && (
+                    <div className="mt-8">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                            hasNextPage={hasNextPage}
+                            hasPrevPage={hasPrevPage}
+                        />
                     </div>
                 )}
             </div>

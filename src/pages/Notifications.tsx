@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Bell, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getAllNotifications, Notification } from '../api/notificationApi';
+import Pagination from '../components/Pagination';
 
 const Notifications = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -9,15 +10,32 @@ const Notifications = () => {
     const [error, setError] = useState<string | null>(null);
     const [audianceFilter, setAudianceFilter] = useState<string>('');
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const limit = 10; // Show 10 notifications per page
+
     useEffect(() => {
         fetchNotifications();
-    }, []);
+    }, [audianceFilter, currentPage]);
+
+    // Reset to page 1 when filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [audianceFilter]);
 
     const fetchNotifications = async () => {
         try {
             setLoading(true);
-            const response = await getAllNotifications();
+            const response = await getAllNotifications({
+                audiance: audianceFilter || undefined,
+                page: currentPage,
+                limit: limit
+            });
             setNotifications(response.data);
+            if (response.meta) {
+                setTotalPages(response.meta.totalPages);
+            }
             setError(null);
         } catch (err) {
             console.error('Failed to fetch notifications:', err);
@@ -27,11 +45,13 @@ const Notifications = () => {
         }
     };
 
-    // Filter notifications based on audience
-    const filteredNotifications = notifications.filter(item => {
-        if (!audianceFilter) return true;
-        return item.audiance === audianceFilter;
-    });
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Since we're now filtering on the server side, we can use notifications directly
+    const filteredNotifications = notifications;
 
     return (
         <div className="bg-gray-50 min-h-screen py-6 sm:py-8 md:py-12">
@@ -137,6 +157,17 @@ const Notifications = () => {
                                 </Link>
                             ))
                         )}
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {!loading && !error && filteredNotifications.length > 0 && (
+                    <div className="mt-8">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                        />
                     </div>
                 )}
             </div>
