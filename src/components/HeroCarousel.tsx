@@ -63,7 +63,7 @@ const HeroCarousel = () => {
     };
 
     return (
-        <div className="relative w-full h-screen overflow-hidden">
+        <div className="relative w-full h-[70vh] overflow-hidden mx-4 md:mx-8 lg:mx-16 mt-4 rounded-2xl">
             {/* Slides */}
             <div className="relative w-full h-full">
                 {slides.map((slide, index) => (

@@ -63,7 +63,9 @@ const Home = () => {
 
   return (
     <div>
-      <HeroCarousel />
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <HeroCarousel />
+      </div>
       <AlumniByOccupation />
       <Facilities />
 
