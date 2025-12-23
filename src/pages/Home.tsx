@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import HeroCarousel from "@/components/HeroCarousel";
 import AlumniByOccupation from "@/components/AlumniByOccupation";
+import Facilities from "@/components/Facilities";
 import { getAllNews, News } from "@/api/newsApi";
 import { getAllEvents, Event } from "@/api/eventsApi";
 import { API_BASE_URL } from "@/api/apiClient";
 import "./Home.css";
+
 
 
 const Home = () => {
@@ -63,100 +65,7 @@ const Home = () => {
     <div>
       <HeroCarousel />
       <AlumniByOccupation />
-
-      {/* Facilities Section */}
-      <section className="facilities-section">
-        <div className="section-container">
-          <div className="facilities-header">
-            <h2 className="section-title">Facilities We Provide</h2>
-            <p className="facilities-subtitle">
-              Empowering students with world-class infrastructure and comprehensive support
-            </p>
-          </div>
-
-          <div className="facilities-grid">
-            <div className="facility-card">
-              <div className="facility-icon">🍽️</div>
-              <h3 className="facility-title">Canteen & Transportation</h3>
-              <p className="facility-description">
-                Safe, well-organized transportation services and hygienic canteen facilities for students
-              </p>
-            </div>
-
-            <div className="facility-card">
-              <div className="facility-icon">🏠</div>
-              <h3 className="facility-title">Hostel Facilities</h3>
-              <p className="facility-description">
-                Separate hostel facilities for boys and girls with modern amenities and security
-              </p>
-            </div>
-
-            <div className="facility-card">
-              <div className="facility-icon">🎓</div>
-              <h3 className="facility-title">Expert Coaching</h3>
-              <p className="facility-description">
-                Specialized coaching for NEET, JEE, CA, and CMA aspirants by experienced mentors
-              </p>
-            </div>
-
-            <div className="facility-card">
-              <div className="facility-icon">📊</div>
-              <h3 className="facility-title">Academic Assessments</h3>
-              <p className="facility-description">
-                Monthly and periodic assessments to track and enhance student progress
-              </p>
-            </div>
-
-            <div className="facility-card">
-              <div className="facility-icon">👨‍👩‍👧‍👦</div>
-              <h3 className="facility-title">Parent Interaction</h3>
-              <p className="facility-description">
-                Continuous interaction and feedback sessions with parents for holistic development
-              </p>
-            </div>
-
-            <div className="facility-card">
-              <div className="facility-icon">✅</div>
-              <h3 className="facility-title">ISO Certified</h3>
-              <p className="facility-description">
-                ISO-certified institution with highly qualified and experienced faculty members
-              </p>
-            </div>
-
-            <div className="facility-card">
-              <div className="facility-icon">🔬</div>
-              <h3 className="facility-title">Modern Laboratories</h3>
-              <p className="facility-description">
-                Well-equipped computer and science practical laboratories for hands-on learning
-              </p>
-            </div>
-
-            <div className="facility-card">
-              <div className="facility-icon">📚</div>
-              <h3 className="facility-title">Library Facilities</h3>
-              <p className="facility-description">
-                Comprehensive library with extensive resources for in-depth learning and research
-              </p>
-            </div>
-
-            <div className="facility-card">
-              <div className="facility-icon">🎯</div>
-              <h3 className="facility-title">Career Guidance</h3>
-              <p className="facility-description">
-                Dedicated career guidance cell to support and shape future aspirations
-              </p>
-            </div>
-
-            <div className="facility-card">
-              <div className="facility-icon">💻</div>
-              <h3 className="facility-title">Online Learning</h3>
-              <p className="facility-description">
-                Association with Schoolnet for additional online classes, enhancing learning beyond the classroom
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Facilities />
 
       {/* Latest News Section */}
       <section className="latest-news-section">
