@@ -10,6 +10,7 @@ import Notifications from "@/pages/Notifications";
 import NotificationDetail from "@/pages/NotificationDetail";
 import Contact from "@/pages/Contact";
 import Faculty from "@/pages/Faculty";
+import Admissions from "@/pages/Admissions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Memories from "@/pages/Memories";
@@ -45,6 +46,7 @@ function App() {
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
+          <Route path="admissions" element={<Admissions />} />
           <Route path="news" element={<News />} />
           <Route path="news/:id" element={<NewsDetail />} />
           <Route path="events" element={<Events />} />

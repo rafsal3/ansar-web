@@ -87,6 +87,11 @@ const Navbar = () => {
                                 About
                             </Link>
                         </li>
+                        <li>
+                            <Link to="/admissions" className={navLinkClass("/admissions")}>
+                                Admissions
+                            </Link>
+                        </li>
 
                         {/* Academics Dropdown */}
                         <li
@@ -291,6 +296,9 @@ const Navbar = () => {
                         </Link>
                         <Link to="/about" className={mobileNavLinkClass("/about")} onClick={closeMobileMenu}>
                             About
+                        </Link>
+                        <Link to="/admissions" className={mobileNavLinkClass("/admissions")} onClick={closeMobileMenu}>
+                            Admissions
                         </Link>
 
                         {/* Mobile Academics Dropdown */}
