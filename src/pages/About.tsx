@@ -95,12 +95,21 @@ const About = () => {
                         />
                     </div>
                     <div className="w-full md:w-2/3 space-y-4">
-                        <p className="text-gray-600 italic text-lg">
-                            "At Ansar Group of Institutions, we believe education is not just about acquiring knowledge but about igniting a lifelong passion for learning. We are committed to providing an environment where students can explore their potential and achieve their dreams."
+                        <p className="text-gray-600">
+                            Ansar Higher Secondary School has, within a remarkably short span of time, emerged as a centre of excellence in the field of education. With a clear vision and an unwavering commitment to quality, the institution continues to earn the trust and confidence of students, parents, and the wider community.
                         </p>
-                        <div>
-                            <p className="font-bold text-gray-900">Principal</p>
-                            <p className="text-gray-500">Ansar Group of Institutions</p>
+                        <p className="text-gray-600">
+                            At Ansar, we believe that every child possesses unique talents and limitless potential. Our mission is to help students identify these talents and develop them to the fullest. By providing the right learning environment—guided by qualified, experienced, and dynamic teachers—we ensure that students receive the academic strength, moral values, and life skills needed to face future challenges with confidence.
+                        </p>
+                        <p className="text-gray-600">
+                            We warmly welcome your child to Ansar Institutions, where education goes beyond textbooks. We promise to provide every possible facility and opportunity to support each student's journey toward success, enabling them to grow into responsible individuals and valuable contributors to society.
+                        </p>
+                        <p className="text-gray-600 italic">
+                            Together, let us work towards a better future—where hard work creates opportunity, and potential is transformed into performance.
+                        </p>
+                        <div className="mt-6">
+                            <p className="font-bold text-gray-900">Ismail Parambath</p>
+                            <p className="text-gray-500">Principal</p>
                         </div>
                     </div>
                 </div>
