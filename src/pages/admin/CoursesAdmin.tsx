@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, BookOpen, X, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, BookOpen, X, Loader2, ChevronDown, ChevronUp, GraduationCap } from 'lucide-react';
 import { coursesApi, Course, CreateCourseData } from '../../api/coursesApi';
 import { toast } from 'react-hot-toast';
-import Pagination from '../../components/Pagination';
+
+// Interface for grouped courses by department
+interface DepartmentGroup {
+    department: string;
+    courses: Course[];
+    duration: string;
+    totalSeats: number;
+}
 
 const CoursesAdmin = () => {
     const [courses, setCourses] = useState<Course[]>([]);
@@ -10,12 +17,7 @@ const CoursesAdmin = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCourse, setEditingCourse] = useState<Course | null>(null);
     const [submitting, setSubmitting] = useState(false);
-
-    // Pagination states
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [hasNextPage, setHasNextPage] = useState(false);
-    const [hasPrevPage, setHasPrevPage] = useState(false);
+    const [expandedDepartments, setExpandedDepartments] = useState<Set<string>>(new Set());
 
     const initialFormData: CreateCourseData = {
         name: '',
@@ -26,15 +28,15 @@ const CoursesAdmin = () => {
 
     const [formData, setFormData] = useState<CreateCourseData>(initialFormData);
 
-    const fetchCourses = async (page: number = 1) => {
+    const fetchCourses = async () => {
         try {
             setLoading(true);
-            const response = await coursesApi.getAllCourses(page, 5);
+            // Fetch all courses to group them properly
+            const response = await coursesApi.getAllCourses(1, 100);
             setCourses(response.data);
-            setCurrentPage(response.meta.page);
-            setTotalPages(response.meta.totalPages);
-            setHasNextPage(response.meta.hasNextPage);
-            setHasPrevPage(response.meta.hasPrevPage);
+            // Expand all departments by default
+            const departments = new Set(response.data.map(c => c.department));
+            setExpandedDepartments(departments);
         } catch (error) {
             console.error('Failed to fetch courses:', error);
             toast.error('Failed to load courses');
@@ -44,8 +46,38 @@ const CoursesAdmin = () => {
     };
 
     useEffect(() => {
-        fetchCourses(currentPage);
-    }, [currentPage]);
+        fetchCourses();
+    }, []);
+
+    // Group courses by department
+    const groupedCourses: DepartmentGroup[] = courses.reduce((acc: DepartmentGroup[], course) => {
+        const existingDept = acc.find(dept => dept.department === course.department);
+
+        if (existingDept) {
+            existingDept.courses.push(course);
+        } else {
+            acc.push({
+                department: course.department,
+                courses: [course],
+                duration: course.duration, // Use first course's duration for department
+                totalSeats: course.seats // Use first course's seats for department
+            });
+        }
+
+        return acc;
+    }, []);
+
+    const toggleDepartment = (department: string) => {
+        setExpandedDepartments(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(department)) {
+                newSet.delete(department);
+            } else {
+                newSet.add(department);
+            }
+            return newSet;
+        });
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -68,8 +100,7 @@ const CoursesAdmin = () => {
             }
             setIsModalOpen(false);
             resetForm();
-            setCurrentPage(1);
-            await fetchCourses(1);
+            await fetchCourses();
         } catch (error) {
             console.error('Operation failed:', error);
             toast.error(editingCourse ? 'Failed to update course' : 'Failed to create course');
@@ -84,7 +115,7 @@ const CoursesAdmin = () => {
         try {
             await coursesApi.deleteCourse(id);
             toast.success('Course deleted successfully');
-            await fetchCourses(currentPage);
+            await fetchCourses();
         } catch (error) {
             console.error('Delete failed:', error);
             toast.error('Failed to delete course');
@@ -113,12 +144,43 @@ const CoursesAdmin = () => {
         setFormData(initialFormData);
     };
 
+    // Define gradient colors for different departments
+    const departmentColors: { [key: string]: string } = {
+        '+1 Science': 'bg-blue-50 border-blue-200 text-blue-700',
+        '+1 Commerce': 'bg-emerald-50 border-emerald-200 text-emerald-700',
+        '+1 Integrated Programs': 'bg-purple-50 border-purple-200 text-purple-700',
+        'High-Achiever\'s Batch': 'bg-orange-50 border-orange-200 text-orange-700',
+    };
+
+    const getColorClass = (department: string, index: number): string => {
+        if (departmentColors[department]) {
+            return departmentColors[department];
+        }
+        const colors = [
+            'bg-pink-50 border-pink-200 text-pink-700',
+            'bg-indigo-50 border-indigo-200 text-indigo-700',
+            'bg-cyan-50 border-cyan-200 text-cyan-700',
+        ];
+        return colors[index % colors.length];
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <div className="flex items-center gap-2 text-teal-600">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                    <span className="text-xl font-medium">Loading courses...</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-6">
+        <div className="h-screen flex flex-col space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Courses Management</h1>
-                    <p className="text-gray-500 mt-1">Manage academic courses and programs</p>
+                    <p className="text-gray-500 mt-1">Manage academic courses grouped by departments</p>
                 </div>
                 <button
                     onClick={openAddModal}
@@ -129,79 +191,86 @@ const CoursesAdmin = () => {
                 </button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-100">
-                            <tr>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-900">Course Name</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-900">Department</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-900">Duration</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-900">Seats</th>
-                                <th className="px-6 py-4 text-sm font-semibold text-gray-900 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            Loading courses...
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : courses.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                        No courses found
-                                    </td>
-                                </tr>
-                            ) : (
-                                courses.map((course) => (
-                                    <tr key={course.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-teal-50 rounded-lg text-teal-600">
-                                                    <BookOpen className="w-4 h-4" />
-                                                </div>
-                                                <p className="font-medium text-gray-900">{course.name}</p>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{course.department}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{course.duration}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">{course.seats}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => openEditModal(course)}
-                                                    className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
-                                                >
-                                                    <Pencil className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(course.id)}
-                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+            {/* Department Groups */}
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                {groupedCourses.length === 0 ? (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center text-gray-500">
+                        No courses found. Click "Add Course" to create your first course.
+                    </div>
+                ) : (
+                    groupedCourses.map((dept, index) => (
+                        <div key={dept.department} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            {/* Department Header */}
+                            <button
+                                onClick={() => toggleDepartment(dept.department)}
+                                className={`w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors border-l-4 ${getColorClass(dept.department, index)}`}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2 bg-white rounded-lg">
+                                        <GraduationCap className="w-5 h-5" />
+                                    </div>
+                                    <div className="text-left">
+                                        <h2 className="text-lg font-bold text-gray-900">{dept.department}</h2>
+                                        <p className="text-sm text-gray-600">
+                                            {dept.courses.length} {dept.courses.length === 1 ? 'Subject' : 'Subjects'} • {dept.duration} • {dept.totalSeats} Seats
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {expandedDepartments.has(dept.department) ? (
+                                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                                    ) : (
+                                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                                    )}
+                                </div>
+                            </button>
 
-                {/* Pagination */}
-                <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                    hasNextPage={hasNextPage}
-                    hasPrevPage={hasPrevPage}
-                />
+                            {/* Department Courses Table */}
+                            {expandedDepartments.has(dept.department) && (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead className="bg-gray-50 border-y border-gray-100">
+                                            <tr>
+                                                <th className="px-6 py-3 text-sm font-semibold text-gray-900">Subject Name</th>
+                                                <th className="px-6 py-3 text-sm font-semibold text-gray-900 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {dept.courses.map((course) => (
+                                                <tr key={course.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="p-2 bg-teal-50 rounded-lg text-teal-600">
+                                                                <BookOpen className="w-4 h-4" />
+                                                            </div>
+                                                            <p className="font-medium text-gray-900">{course.name}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button
+                                                                onClick={() => openEditModal(course)}
+                                                                className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                                            >
+                                                                <Pencil className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(course.id)}
+                                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    ))
+                )}
             </div>
 
             {/* Modal */}
@@ -223,7 +292,7 @@ const CoursesAdmin = () => {
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Course Name
+                                    Subject Name
                                 </label>
                                 <input
                                     type="text"
@@ -232,7 +301,7 @@ const CoursesAdmin = () => {
                                     value={formData.name}
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                    placeholder="e.g. Science (PCMB)"
+                                    placeholder="e.g. Physics, Chemistry, Business Studies"
                                 />
                             </div>
 
@@ -248,17 +317,16 @@ const CoursesAdmin = () => {
                                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                                 >
                                     <option value="">Select Department</option>
-                                    <option value="Science">Science</option>
-                                    <option value="Commerce">Commerce</option>
-                                    <option value="Humanities">Humanities</option>
-                                    <option value="Computer Science">Computer Science</option>
-                                    <option value="Other">Other</option>
+                                    <option value="+1 Science">+1 Science</option>
+                                    <option value="+1 Commerce">+1 Commerce</option>
+                                    <option value="+1 Integrated Programs">+1 Integrated Programs</option>
+                                    <option value="High-Achiever's Batch">High-Achiever's Batch with IIT and NEET</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Duration
+                                    Duration (for entire department)
                                 </label>
                                 <input
                                     type="text"
@@ -269,11 +337,12 @@ const CoursesAdmin = () => {
                                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                                     placeholder="e.g. 2 Years"
                                 />
+                                <p className="text-xs text-gray-500 mt-1">This applies to all subjects in the department</p>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Seats
+                                    Seats (for entire department)
                                 </label>
                                 <input
                                     type="number"
@@ -285,6 +354,7 @@ const CoursesAdmin = () => {
                                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                                     placeholder="e.g. 60"
                                 />
+                                <p className="text-xs text-gray-500 mt-1">Total seats available for this department</p>
                             </div>
 
                             <div className="flex gap-4 pt-4">
