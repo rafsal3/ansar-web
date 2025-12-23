@@ -152,6 +152,23 @@ const Occupations = () => {
                     </div>
                 </div>
 
+                {/* Alumni Network Description */}
+                <div className="mb-12 bg-white rounded-xl shadow-sm border border-gray-200 p-8 md:p-10">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Our Alumni Network</h2>
+
+                    <div className="space-y-4 text-gray-600 leading-relaxed">
+                        <p>
+                            Our alumni are a testament to the excellence and vision nurtured on campus. From their humble beginnings in classrooms and labs, they have grown into global leaders, innovators, and changemakers across diverse fields. Always connected to their alma mater, they guide and inspire current students through mentorship, share industry insights, and contribute to building a thriving professional network.
+                        </p>
+                        <p>
+                            Each success story reflects the spirit of learning, ambition, and achievement that defines our college, making our alumni a source of pride and inspiration for generations to come.
+                        </p>
+                        <p className="pt-2 border-t border-gray-200">
+                            We conduct annual meets, reunions, and networking events to celebrate achievements and stay connected.
+                        </p>
+                    </div>
+                </div>
+
                 {/* Occupation Cards Grid */}
                 {jobs.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
