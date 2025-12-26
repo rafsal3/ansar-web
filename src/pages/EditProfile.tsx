@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Mail, Phone, Calendar, GraduationCap, Save, ArrowLeft, Camera } from 'lucide-react';
+import { User, Mail, Phone, Calendar, GraduationCap, Save, ArrowLeft, Camera, KeyRound } from 'lucide-react';
 import { alumniApi, AlumniProfile } from '@/api/alumniApi';
 import { getAllJobs, Job } from '@/api/jobApi';
+import { resetAlumniPassword } from '@/api/authApi';
 import { API_BASE_URL } from '@/api/apiClient';
 
 const EditProfile = () => {
@@ -14,6 +15,16 @@ const EditProfile = () => {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+    // Password reset state (separate from profile update)
+    const [resettingPassword, setResettingPassword] = useState(false);
+    const [passwordResetError, setPasswordResetError] = useState<string | null>(null);
+    const [passwordResetSuccess, setPasswordResetSuccess] = useState<string | null>(null);
+    const [passwordData, setPasswordData] = useState({
+        newPassword: '',
+        confirmPassword: ''
+    });
+
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -25,9 +36,7 @@ const EditProfile = () => {
         jobId: '',
         instagram: '',
         facebook: '',
-        whatsapp: '',
-        password: '',
-        confirmPassword: ''
+        whatsapp: ''
     });
 
     useEffect(() => {
@@ -57,9 +66,7 @@ const EditProfile = () => {
                     jobId: profileResponse.job?.id.toString() || '',
                     instagram: profileResponse.instagram || '',
                     facebook: profileResponse.facebook || '',
-                    whatsapp: profileResponse.whatsapp || '',
-                    password: '',
-                    confirmPassword: ''
+                    whatsapp: profileResponse.whatsapp || ''
                 });
             } catch (err: any) {
                 console.error('Error fetching data:', err);
@@ -74,14 +81,6 @@ const EditProfile = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Validate password fields if provided
-        if (formData.password || formData.confirmPassword) {
-            if (formData.password !== formData.confirmPassword) {
-                setError('Passwords do not match');
-                return;
-            }
-        }
 
         try {
             setSubmitting(true);
@@ -100,8 +99,6 @@ const EditProfile = () => {
                 instagram: formData.instagram,
                 facebook: formData.facebook,
                 whatsapp: formData.whatsapp,
-                password: formData.password || undefined,
-                confirmPassword: formData.confirmPassword || undefined,
                 photo: selectedPhoto || undefined
             };
 
@@ -112,8 +109,7 @@ const EditProfile = () => {
             const updatedData = await alumniApi.getAlumniMe();
             setProfileData(updatedData);
 
-            // Clear password fields and photo selection
-            setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+            // Clear photo selection
             setSelectedPhoto(null);
             setPhotoPreview(null);
 
@@ -145,6 +141,63 @@ const EditProfile = () => {
                 setPhotoPreview(reader.result as string);
             };
             reader.readAsDataURL(file);
+        }
+    };
+
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPasswordData({
+            ...passwordData,
+            [e.target.name]: e.target.value
+        });
+        // Clear errors when user starts typing
+        setPasswordResetError(null);
+    };
+
+    const handlePasswordReset = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        // Validate passwords match
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            setPasswordResetError('Passwords do not match');
+            return;
+        }
+
+        // Validate password length
+        if (passwordData.newPassword.length < 6) {
+            setPasswordResetError('Password must be at least 6 characters long');
+            return;
+        }
+
+        if (!profileData?.email) {
+            setPasswordResetError('Email not found. Please try again.');
+            return;
+        }
+
+        try {
+            setResettingPassword(true);
+            setPasswordResetError(null);
+            setPasswordResetSuccess(null);
+
+            await resetAlumniPassword({
+                email: profileData.email,
+                newPassword: passwordData.newPassword
+            });
+
+            setPasswordResetSuccess('Password reset successfully!');
+
+            // Clear password fields
+            setPasswordData({
+                newPassword: '',
+                confirmPassword: ''
+            });
+
+            // Scroll to password section to show success message
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        } catch (err: any) {
+            console.error('Error resetting password:', err);
+            setPasswordResetError(err.response?.data?.message || 'Failed to reset password. Please try again.');
+        } finally {
+            setResettingPassword(false);
         }
     };
 
@@ -480,47 +533,6 @@ const EditProfile = () => {
                             </div>
                         </div>
 
-                        {/* Password Change Section (Optional) */}
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <User className="w-5 h-5 text-teal-600" />
-                                Change Password (Optional)
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Password */}
-                                <div>
-                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                                        New Password
-                                    </label>
-                                    <input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                        placeholder="Leave blank to keep current"
-                                    />
-                                </div>
-
-                                {/* Confirm Password */}
-                                <div>
-                                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Confirm New Password
-                                    </label>
-                                    <input
-                                        id="confirmPassword"
-                                        name="confirmPassword"
-                                        type="password"
-                                        value={formData.confirmPassword}
-                                        onChange={handleChange}
-                                        className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                        placeholder="Confirm new password"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
                         {/* Submit Button */}
                         <button
                             type="submit"
@@ -536,6 +548,93 @@ const EditProfile = () => {
                                 <>
                                     <Save className="w-5 h-5" />
                                     Save Changes
+                                </>
+                            )}
+                        </button>
+                    </form>
+                </div>
+
+                {/* Password Reset Card - Separate from Profile Update */}
+                <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 mt-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <KeyRound className="w-5 h-5 text-teal-600" />
+                        Reset Password
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-6">
+                        Use this section to reset your password. This is separate from updating your profile information.
+                    </p>
+
+                    {/* Password Reset Success Message */}
+                    {passwordResetSuccess && (
+                        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                            <p className="text-green-800 text-sm font-medium">{passwordResetSuccess}</p>
+                        </div>
+                    )}
+
+                    {/* Password Reset Error Message */}
+                    {passwordResetError && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                            <p className="text-red-800 text-sm font-medium">{passwordResetError}</p>
+                        </div>
+                    )}
+
+                    <form onSubmit={handlePasswordReset} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* New Password */}
+                            <div>
+                                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                                    New Password *
+                                </label>
+                                <input
+                                    id="newPassword"
+                                    name="newPassword"
+                                    type="password"
+                                    required
+                                    value={passwordData.newPassword}
+                                    onChange={handlePasswordChange}
+                                    className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                    placeholder="Enter new password"
+                                    disabled={resettingPassword}
+                                    minLength={6}
+                                />
+                                <p className="mt-1 text-xs text-gray-500">Must be at least 6 characters</p>
+                            </div>
+
+                            {/* Confirm Password */}
+                            <div>
+                                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Confirm New Password *
+                                </label>
+                                <input
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    type="password"
+                                    required
+                                    value={passwordData.confirmPassword}
+                                    onChange={handlePasswordChange}
+                                    className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                                    placeholder="Confirm new password"
+                                    disabled={resettingPassword}
+                                    minLength={6}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Reset Password Button */}
+                        <button
+                            type="submit"
+                            disabled={resettingPassword}
+                            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-all shadow-lg shadow-teal-200"
+                        >
+                            {resettingPassword ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                    Resetting Password...
+                                </>
+                            ) : (
+                                <>
+                                    <KeyRound className="w-5 h-5" />
+                                    Reset Password
                                 </>
                             )}
                         </button>

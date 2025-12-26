@@ -132,33 +132,28 @@ const Login = () => {
                             </div>
                         </div>
 
-                        {/* Remember Me & Forgot Password */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <input
-                                    id="remember-me"
-                                    name="remember-me"
-                                    type="checkbox"
-                                    className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
-                                />
-                                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                                    Remember me
-                                </label>
-                            </div>
-                            <a href="#" className="text-sm font-medium text-teal-600 hover:text-teal-700">
-                                Forgot password?
-                            </a>
+                        {/* Remember Me */}
+                        <div className="flex items-center">
+                            <input
+                                id="remember-me"
+                                name="remember-me"
+                                type="checkbox"
+                                className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                            />
+                            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                                Remember me
+                            </label>
                         </div>
 
                         {/* Error/Warning Message */}
                         {error && (
                             <div className={`p-4 rounded-xl border ${error.toLowerCase().includes('not yet approved') || error.toLowerCase().includes('not approved')
-                                    ? 'bg-amber-50 border-amber-200'
-                                    : 'bg-red-50 border-red-200'
+                                ? 'bg-amber-50 border-amber-200'
+                                : 'bg-red-50 border-red-200'
                                 }`}>
                                 <p className={`text-sm text-center font-medium ${error.toLowerCase().includes('not yet approved') || error.toLowerCase().includes('not approved')
-                                        ? 'text-amber-800'
-                                        : 'text-red-600'
+                                    ? 'text-amber-800'
+                                    : 'text-red-600'
                                     }`}>
                                     {error}
                                 </p>

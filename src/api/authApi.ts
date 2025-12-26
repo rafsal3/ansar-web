@@ -37,6 +37,11 @@ export interface AlumniLoginPayload {
     password: string;
 }
 
+export interface ResetPasswordPayload {
+    email: string;
+    newPassword: string;
+}
+
 /* ================= API CALLS ================= */
 
 /**
@@ -69,4 +74,11 @@ export const logout = async (): Promise<void> => {
 export const refreshToken = async (refreshToken: string): Promise<LoginResponse> => {
     const response = await apiClient.post('/auth/refresh', { refreshToken });
     return response.data;
+};
+
+/**
+ * Reset alumni password
+ */
+export const resetAlumniPassword = async (payload: ResetPasswordPayload): Promise<void> => {
+    await apiClient.post('/auth/alumni/reset-password', payload);
 };
